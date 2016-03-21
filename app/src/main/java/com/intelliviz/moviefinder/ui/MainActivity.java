@@ -18,19 +18,19 @@ import com.intelliviz.moviefinder.R;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
-    public static final String MOVIE_API_KEY = "";
-    public static final String MovieUrl = "https://api.themoviedb.org/3/movie/popular?api_key=" + MOVIE_API_KEY;
+    public String MovieUrl = "https://api.themoviedb.org/3/movie/popular?api_key=";
     public static final String PosterUrl = "http://image.tmdb.org/t/p/w185%s";
     public static final String MOVIE_EXTRA = "movie_info";
     private List<Movie> mMovies = new ArrayList<>();
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +38,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         String api_key = getApiKey();
+        // TODO if api_key is null, need to show message and exit
+        MovieUrl = "https://api.themoviedb.org/3/movie/popular?api_key=" + api_key;
 
         GridView gridView = (GridView) findViewById(R.id.grid_view);
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -64,11 +66,17 @@ public class MainActivity extends AppCompatActivity {
         AssetManager assetManager = getAssets();
         try {
             InputStream in = assetManager.open("api_key.json");
-            byte[] buffer = new byte[128];
-            in.read(buffer);
-            String str = buffer.toString();
-            JSONObject obj = new JSONObject(str);
+            InputStreamReader inputStream = new InputStreamReader(in);
+            BufferedReader reader = new BufferedReader(inputStream);
+            StringBuffer buffer = new StringBuffer();
+            String line;
+            while((line = reader.readLine()) != null) {
+                buffer.append(line+"\n");
+            }
+
+            JSONObject obj = new JSONObject(buffer.toString());
             String api_key = obj.getString("api_key");
+            return api_key;
         } catch (IOException e) {
             e.printStackTrace();
         } catch (JSONException e) {
