@@ -108,7 +108,8 @@ public class FetchMoviesTask extends AsyncTask<String, Void, List<Movie>> {
             String releaseDate = object.getString("release_date");
             String id = object.getString("id");
             String title = object.getString("title");
-            Movie movie = new Movie(title, posterPath, overview, id, releaseDate);
+            String averageVote = object.getString("vote_average");
+            Movie movie = new Movie(title, posterPath, overview, id, releaseDate, averageVote);
             return movie;
         } catch (JSONException e) {
             Log.e(TAG, "Error reading movie");

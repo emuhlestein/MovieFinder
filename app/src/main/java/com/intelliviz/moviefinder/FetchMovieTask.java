@@ -108,7 +108,7 @@ public class FetchMovieTask extends AsyncTask<String, Void, Movie> {
             String releaseDate = object.getString("release_date");
             String id = object.getString("id");
             String title = object.getString("title");
-            Movie movie = new Movie(title, posterPath, overview, id, releaseDate);
+            Movie movie = new Movie(title, posterPath, overview, id, releaseDate, "");
             return movie;
         } catch (JSONException e) {
             Log.e(TAG, "Error reading movie");
@@ -118,6 +118,6 @@ public class FetchMovieTask extends AsyncTask<String, Void, Movie> {
     }
 
     @Override
-    protected void onPostExecute(Movie movies) {
+    protected void onPostExecute(Movie movie) {
     }
 }

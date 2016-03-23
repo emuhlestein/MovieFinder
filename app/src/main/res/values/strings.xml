@@ -1,4 +1,10 @@
 <resources>
     <string name="app_name">MovieFinder</string>
-    <string name="title_activity_movie_details">MovieDetailsActivity</string>
+    <string name="title_activity_movie_details">MovieDetail</string>
+    <string name="pref_sort_by_title">Sort By</string>
+    <string name="pref_sort_by_key">sort_by</string>
+    <string name="most_popular">Most Popular</string>
+    <string name="highest_rated">Highest Rated</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_main2">Main2Activity</string>
 </resources>
