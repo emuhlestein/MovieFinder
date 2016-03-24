@@ -1,12 +1,13 @@
 package com.intelliviz.moviefinder.ui;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -29,14 +30,21 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ *
+ */
 public class MainActivity extends AppCompatActivity
         implements SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = MainActivity.class.getSimpleName();
+    private static final String API_KEY_NOT_SET = "api key not set";
+    private static final String DEFAULT_SORT_BY_OPTION = "popular";
+    private static final String DEFAULT_PAGE = "1";
+    private static final String MOVIEDB_END_POINT = "https://api.themoviedb.org/3/movie/";
     public String MovieUrl = "https://api.themoviedb.org/3/movie/popular?page=2&api_key=";
     public static final String PosterUrl = "http://image.tmdb.org/t/p/w185%s";
     public static final String MOVIE_EXTRA = "movie_info";
     private List<Movie> mMovies = new ArrayList<>();
-    private String mApiKey;
+    private String mApiKey = API_KEY_NOT_SET; // Put api key here;
     ArrayAdapter<Movie> mAdapter;
 
     @Override
@@ -45,16 +53,18 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         mApiKey = getApiKey();
-        // TODO if api_key is null, need to show message and exit
-        MovieUrl = "https://api.themoviedb.org/3/movie/popular?page=2&api_key=" + mApiKey;
+        if(mApiKey == null) {
+            if(mApiKey.equals(API_KEY_NOT_SET)) {
+                fatalError();
+            }
+        }
+        MovieUrl = buildMovieUrl(DEFAULT_SORT_BY_OPTION);
 
         GridView gridView = (GridView) findViewById(R.id.grid_view);
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Movie movie = mMovies.get(position);
-
-                Log.d(TAG, "Selected movie: " + movie.getTitle());
 
                 Intent intent = new Intent(MainActivity.this, MovieDetailsActivity.class);
                 intent.putExtra(MOVIE_EXTRA, movie);
@@ -70,7 +80,6 @@ public class MainActivity extends AppCompatActivity
 
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         sp.registerOnSharedPreferenceChangeListener(this);
-
     }
 
     @Override
@@ -82,12 +91,8 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             Intent settingsActivity = new Intent(this, SettingsActivity.class);
             startActivity(settingsActivity);
@@ -97,7 +102,27 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        String sort_by = sharedPreferences.getString(key, DEFAULT_SORT_BY_OPTION);
+        MovieUrl = buildMovieUrl(sort_by);
+        FetchMoviesTask movieTask = new FetchMoviesTask(mAdapter, mMovies);
+        movieTask.execute(MovieUrl);
+    }
 
+    private String buildMovieUrl(String sortBy) {
+        String url = MOVIEDB_END_POINT
+                + sortBy
+                + "?page="+ DEFAULT_PAGE
+                + "&api_key=" + mApiKey;
+        return url;
+    }
+
+    /**
+     * Get the api key from an external file: api_key.json located in the assets directory.
+     * File is not under source code control. It is listed in .gitignore.
+     * @return The api key, if found. Otherwise, null.
+     */
     private String getApiKey() {
         AssetManager assetManager = getAssets();
         try {
@@ -122,15 +147,19 @@ public class MainActivity extends AppCompatActivity
         return null;
     }
 
-    @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        Log.d(TAG, "Shared Preference Change: " + key);
-
-        // TODO default to popular
-        String sort_by = sharedPreferences.getString(key, "");
-        Log.d(TAG, "New value for key: " + sort_by);
-        MovieUrl = "https://api.themoviedb.org/3/movie/" + sort_by + "?api_key=" + mApiKey;
-        FetchMoviesTask movieTask = new FetchMoviesTask(mAdapter, mMovies);
-        movieTask.execute(MovieUrl);
+    /**
+     * Show fatal error and exit app.
+     */
+    private void fatalError() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Application Error")
+                .setMessage("No api key-app must exit");
+        builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                MainActivity.this.finish();
+            }
+        });
+        builder.show();
     }
 }
