@@ -58,7 +58,16 @@ public class MainActivity extends AppCompatActivity
                 fatalError();
             }
         }
-        MovieUrl = buildMovieUrl(DEFAULT_SORT_BY_OPTION);
+
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        sp.registerOnSharedPreferenceChangeListener(this);
+        String sort_key = getResources().getString(R.string.pref_sort_by_key);
+        String sort_by = sp.getString(sort_key, DEFAULT_SORT_BY_OPTION);
+        if(sort_by == null) {
+            MovieUrl = buildMovieUrl(DEFAULT_SORT_BY_OPTION);
+        } else {
+            MovieUrl = buildMovieUrl(sort_by);
+        }
 
         GridView gridView = (GridView) findViewById(R.id.grid_view);
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -77,9 +86,6 @@ public class MainActivity extends AppCompatActivity
 
         FetchMoviesTask movieTask = new FetchMoviesTask(mAdapter, mMovies);
         movieTask.execute(MovieUrl);
-
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-        sp.registerOnSharedPreferenceChangeListener(this);
     }
 
     @Override
