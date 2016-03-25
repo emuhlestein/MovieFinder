@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity
     private static final String DEFAULT_SORT_BY_OPTION = "popular";
     private static final String DEFAULT_PAGE = "1";
     private static final String MOVIEDB_END_POINT = "https://api.themoviedb.org/3/movie/";
-    public String MovieUrl = "https://api.themoviedb.org/3/movie/popular?page=2&api_key=";
+    public String MovieUrl;
     public static final String PosterUrl = "http://image.tmdb.org/t/p/w185%s";
     public static final String MOVIE_EXTRA = "movie_info";
     private List<Movie> mMovies = new ArrayList<>();
@@ -90,7 +90,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }

@@ -10,6 +10,7 @@ import com.intelliviz.moviefinder.Movie;
 import com.intelliviz.moviefinder.R;
 import com.squareup.picasso.Picasso;
 
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -52,14 +53,11 @@ public class MovieDetailsActivity extends AppCompatActivity {
         }
 
         releaseDateView.setText(str);
-        averageVoteView.setText(movie.getAverageVote()+"/10");
+        averageVoteView.setText(new DecimalFormat("#.#").format(Float.parseFloat(movie.getAverageVote()))+"/10");
 
         Picasso
                 .with(this)
                 .load(url)
-                .resize(600, 1000)
-                .centerCrop()
                 .into(posterView);
-
     }
 }
