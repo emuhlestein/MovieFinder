@@ -2,7 +2,9 @@
     android:id="@+id/grid_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:columnWidth="200dp"
+    android:horizontalSpacing="0dp"
+    android:verticalSpacing="0dp"
+    android:columnWidth="150dp"
     android:numColumns="auto_fit"
     android:background="#00FFFF"
     android:stretchMode="columnWidth">
