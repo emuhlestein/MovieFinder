@@ -21,18 +21,19 @@
             android:paddingTop="24dp"
             android:textColor="#ffffff"
             android:textSize="36sp"
-            tools:text="San Andreas" />
+            tools:text="San Andreas"
+            android:elevation="8dp"
+            android:shadowColor="@android:color/black" />
 
         <ImageView
             android:id="@+id/posterView"
-            android:layout_width="wrap_content"
+            android:layout_width="150dp"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
             android:layout_below="@+id/titleView"
             android:layout_marginLeft="16dp"
             android:layout_marginTop="8dp"
-            android:adjustViewBounds="true"
-            android:maxHeight="200dp" />
+            android:adjustViewBounds="true"/>
 
         <TextView
             android:id="@+id/releaseDateView"
