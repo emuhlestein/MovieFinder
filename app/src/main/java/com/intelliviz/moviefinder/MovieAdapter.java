@@ -5,7 +5,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.GridView;
 import android.widget.ImageView;
 
 import com.intelliviz.moviefinder.ui.MainActivity;
@@ -34,9 +33,9 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
 
         if(convertView == null) {
             ImageView image = (ImageView) mInflater.inflate(R.layout.movie_item_layout, null);
-            int imageWidth = (int)mContext.getResources().getDimension(R.dimen.image_width);
-            int imageHeight  = (int)mContext.getResources().getDimension(R.dimen.image_height);
-            image.setLayoutParams(new GridView.LayoutParams(imageWidth, imageHeight));
+            //int imageWidth = (int)mContext.getResources().getDimension(R.dimen.image_width);
+            //int imageHeight  = (int)mContext.getResources().getDimension(R.dimen.image_height);
+            //image.setLayoutParams(new GridView.LayoutParams(imageWidth, imageHeight));
             convertView = image;
         }
 
@@ -46,8 +45,8 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
         Picasso
                 .with(mContext)
                 .load(url)
-                .centerCrop()
-                .fit()
+                //.centerCrop()
+                //.fit()
                 .into((ImageView) convertView);
 
         return convertView;
