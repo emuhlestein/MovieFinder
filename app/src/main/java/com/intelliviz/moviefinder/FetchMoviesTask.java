@@ -18,9 +18,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Fetch move data from internet using background thread.
  * Created by edm on 3/18/2016.
  */
-// TODO instead of movie array, use an arraylist
 public class FetchMoviesTask extends AsyncTask<String, Void, List<Movie>> {
     public static final String TAG = FetchMoviesTask.class.getSimpleName();
     private ArrayAdapter<Movie> mMovieAdapter;

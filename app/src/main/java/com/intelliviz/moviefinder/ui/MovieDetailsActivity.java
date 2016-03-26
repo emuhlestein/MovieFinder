@@ -15,6 +15,9 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+/**
+ * Details activity. Show the details of a selected movie.
+ */
 public class MovieDetailsActivity extends AppCompatActivity {
 
     private static final String TAG = MovieDetailsActivity.class.getSimpleName();

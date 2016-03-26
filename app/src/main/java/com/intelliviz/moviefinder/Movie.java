@@ -4,6 +4,9 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 /**
+ * Class that contains information about a movie. Also, object of class can be
+ * passed in a bundle to other activities because it is parcelable.
+ *
  * Created by edm on 3/18/2016.
  */
 public class Movie implements Parcelable {

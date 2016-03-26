@@ -8,6 +8,9 @@ import android.preference.PreferenceManager;
 
 import com.intelliviz.moviefinder.R;
 
+/**
+ * Settings activity. Manage user setttings.
+ */
 public class SettingsActivity extends PreferenceActivity implements Preference.OnPreferenceChangeListener{
 
     @Override

@@ -1,7 +1,6 @@
 package com.intelliviz.moviefinder;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +14,8 @@ import com.squareup.picasso.Picasso;
 import java.util.List;
 
 /**
+ * Adapter for creating views that display images.
+ *
  * Created by edm on 3/18/2016.
  */
 public class MovieAdapter extends ArrayAdapter<Movie> {
@@ -34,13 +35,8 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
         if(convertView == null) {
             ImageView image = (ImageView) mInflater.inflate(R.layout.movie_item_layout, null);
             image.setLayoutParams(new GridView.LayoutParams(550, 800));
-            //image.setAdjustViewBounds(true);
             convertView = image;
         }
-
-        //ImageView image = (ImageView) convertView.findViewById(R.id.image_view);
-        //holder.image.setLayoutParams(new GridView.LayoutParams(485, 485));
-        Log.d(TAG, "Position: " + position);
 
         Movie movie = getItem(position);
         String url = String.format(MainActivity.PosterUrl, movie.getPoster());
@@ -51,7 +47,6 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
                 .centerCrop()
                 .fit()
                 .into((ImageView)convertView);
-        Log.d(TAG, "Loading image: " + url);
 
         return convertView;
     }
