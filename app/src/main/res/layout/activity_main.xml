@@ -4,8 +4,7 @@
     android:layout_height="match_parent"
     android:horizontalSpacing="0dp"
     android:verticalSpacing="0dp"
-    android:columnWidth="150dp"
+    android:columnWidth="@dimen/grid_column_width"
     android:numColumns="auto_fit"
-    android:background="#00FFFF"
     android:stretchMode="columnWidth">
 </GridView>

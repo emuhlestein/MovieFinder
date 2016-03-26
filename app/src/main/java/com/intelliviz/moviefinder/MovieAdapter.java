@@ -34,7 +34,9 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
 
         if(convertView == null) {
             ImageView image = (ImageView) mInflater.inflate(R.layout.movie_item_layout, null);
-            image.setLayoutParams(new GridView.LayoutParams(550, 800));
+            int imageWidth = (int)mContext.getResources().getDimension(R.dimen.image_width);
+            int imageHeight  = (int)mContext.getResources().getDimension(R.dimen.image_height);
+            image.setLayoutParams(new GridView.LayoutParams(imageWidth, imageHeight));
             convertView = image;
         }
 
@@ -46,7 +48,7 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
                 .load(url)
                 .centerCrop()
                 .fit()
-                .into((ImageView)convertView);
+                .into((ImageView) convertView);
 
         return convertView;
     }

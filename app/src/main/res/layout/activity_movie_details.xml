@@ -16,23 +16,23 @@
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
             android:background="@color/colorPrimary"
-            android:paddingBottom="24dp"
-            android:paddingLeft="16dp"
-            android:paddingTop="24dp"
-            android:textColor="#ffffff"
-            android:textSize="36sp"
+            android:paddingBottom="@dimen/title_vertical_padding"
+            android:paddingLeft="@dimen/activity_horizontal_margin"
+            android:paddingTop="@dimen/title_vertical_padding"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/title_text_size"
             tools:text="San Andreas"
-            android:elevation="8dp"
+            android:elevation="@dimen/title_elevation"
             android:shadowColor="@android:color/black" />
 
         <ImageView
             android:id="@+id/posterView"
-            android:layout_width="150dp"
+            android:layout_width="@dimen/detail_image_width"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
             android:layout_below="@+id/titleView"
-            android:layout_marginLeft="16dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginLeft="@dimen/activity_horizontal_margin"
+            android:layout_marginTop="@dimen/detail_image_top_margin"
             android:adjustViewBounds="true"/>
 
         <TextView
@@ -40,10 +40,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/titleView"
-            android:layout_marginLeft="32dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginLeft="@dimen/left_margin"
+            android:layout_marginTop="@dimen/activity_vertical_margin"
             android:layout_toRightOf="@id/posterView"
-            android:textSize="24sp"
+            android:textSize="@dimen/release_date_text_size"
             tools:text="Release Date" />
 
         <TextView
@@ -51,10 +51,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/releaseDateView"
-            android:layout_marginLeft="32dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginLeft="@dimen/left_margin"
+            android:layout_marginTop="@dimen/ave_vote_top_margin"
             android:layout_toRightOf="@id/posterView"
-            android:textSize="18sp"
+            android:textSize="@dimen/detail_text_size"
             tools:text="Release Date" />
 
         <TextView
@@ -63,10 +63,10 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/posterView"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="16dp"
-            android:paddingLeft="16dp"
-            android:paddingRight="16dp"
-            android:textSize="18sp"
+            android:layout_marginTop="@dimen/activity_vertical_margin"
+            android:paddingLeft="@dimen/activity_horizontal_margin"
+            android:paddingRight="@dimen/activity_horizontal_margin"
+            android:textSize="@dimen/detail_text_size"
             tools:text="Movie summary" />
     </RelativeLayout>
 </ScrollView>
