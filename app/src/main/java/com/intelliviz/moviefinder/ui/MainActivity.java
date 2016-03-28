@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Main activity for movie app
@@ -40,10 +39,11 @@ public class MainActivity extends AppCompatActivity
     private static final String DEFAULT_SORT_BY_OPTION = "popular";
     private static final String DEFAULT_PAGE = "1";
     private static final String MOVIEDB_END_POINT = "https://api.themoviedb.org/3/movie/";
+    private static final String MOVIE_LIST_KEY = "movie_list_key";
     public String MovieUrl;
     public static final String PosterUrl = "http://image.tmdb.org/t/p/w185%s";
     public static final String MOVIE_EXTRA = "movie_info";
-    private List<Movie> mMovies = new ArrayList<>();
+    private ArrayList<Movie> mMovies = new ArrayList<>();
     private String mApiKey = API_KEY_NOT_SET; // Put api key here;
     ArrayAdapter<Movie> mAdapter;
 
@@ -59,6 +59,8 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
+
+
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         sp.registerOnSharedPreferenceChangeListener(this);
         String sort_key = getResources().getString(R.string.pref_sort_by_key);
@@ -67,6 +69,14 @@ public class MainActivity extends AppCompatActivity
             MovieUrl = buildMovieUrl(DEFAULT_SORT_BY_OPTION);
         } else {
             MovieUrl = buildMovieUrl(sort_by);
+        }
+
+        if(savedInstanceState == null || !savedInstanceState.containsKey(MOVIE_LIST_KEY)) {
+            mAdapter = new MovieAdapter(this, mMovies);
+            FetchMoviesTask movieTask = new FetchMoviesTask(mAdapter, mMovies);
+            movieTask.execute(MovieUrl);
+        } else {
+            mMovies = savedInstanceState.getParcelableArrayList(MOVIE_LIST_KEY);
         }
 
         GridView gridView = (GridView) findViewById(R.id.grid_view);
@@ -81,11 +91,9 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        mAdapter = new MovieAdapter(this, mMovies);
+
         gridView.setAdapter(mAdapter);
 
-        FetchMoviesTask movieTask = new FetchMoviesTask(mAdapter, mMovies);
-        movieTask.execute(MovieUrl);
     }
 
     @Override
@@ -105,6 +113,12 @@ public class MainActivity extends AppCompatActivity
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putParcelableArrayList(MOVIE_LIST_KEY, mMovies);
+        super.onSaveInstanceState(outState);
     }
 
     @Override

@@ -31,23 +31,20 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
 
-        if(convertView == null) {
+        if (convertView == null) {
             ImageView image = (ImageView) mInflater.inflate(R.layout.movie_item_layout, null);
-            //int imageWidth = (int)mContext.getResources().getDimension(R.dimen.image_width);
-            //int imageHeight  = (int)mContext.getResources().getDimension(R.dimen.image_height);
-            //image.setLayoutParams(new GridView.LayoutParams(imageWidth, imageHeight));
             convertView = image;
         }
 
         Movie movie = getItem(position);
         String url = String.format(MainActivity.PosterUrl, movie.getPoster());
 
-        Picasso
-                .with(mContext)
-                .load(url)
-                //.centerCrop()
-                //.fit()
-                .into((ImageView) convertView);
+        if (url != null) {
+            Picasso
+                    .with(mContext)
+                    .load(url)
+                    .into((ImageView) convertView);
+        }
 
         return convertView;
     }
