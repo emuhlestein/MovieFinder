@@ -6,18 +6,15 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.GridView;
 
-import com.intelliviz.moviefinder.FetchMoviesTask;
 import com.intelliviz.moviefinder.Movie;
-import com.intelliviz.moviefinder.MovieAdapter;
 import com.intelliviz.moviefinder.R;
 
 import org.json.JSONException;
@@ -36,9 +33,8 @@ public class MainActivity extends AppCompatActivity
         implements SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String API_KEY_NOT_SET = "api key not set";
-    private static final String DEFAULT_SORT_BY_OPTION = "popular";
-    private static final String DEFAULT_PAGE = "1";
-    private static final String MOVIEDB_END_POINT = "https://api.themoviedb.org/3/movie/";
+
+
     private static final String MOVIE_LIST_KEY = "movie_list_key";
     public String MovieUrl;
     public static final String PosterUrl = "http://image.tmdb.org/t/p/w185%s";
@@ -50,7 +46,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_fragment);
 
         mApiKey = getApiKey();
         if(mApiKey == null) {
@@ -59,26 +55,26 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
-
-
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-        sp.registerOnSharedPreferenceChangeListener(this);
-        String sort_key = getResources().getString(R.string.pref_sort_by_key);
+        //SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        //sp.registerOnSharedPreferenceChangeListener(this);
+        //String sort_key = getResources().getString(R.string.pref_sort_by_key);
+        /*
         String sort_by = sp.getString(sort_key, DEFAULT_SORT_BY_OPTION);
         if(sort_by == null) {
             MovieUrl = buildMovieUrl(DEFAULT_SORT_BY_OPTION);
         } else {
             MovieUrl = buildMovieUrl(sort_by);
         }
+        */
 
         if(savedInstanceState == null || !savedInstanceState.containsKey(MOVIE_LIST_KEY)) {
-            mAdapter = new MovieAdapter(this, mMovies);
-            FetchMoviesTask movieTask = new FetchMoviesTask(mAdapter, mMovies);
-            movieTask.execute(MovieUrl);
+            //mAdapter = new MovieAdapter(this, mMovies);
+            //FetchMoviesTask movieTask = new FetchMoviesTask(mAdapter, mMovies);
+            //movieTask.execute(MovieUrl);
         } else {
-            mMovies = savedInstanceState.getParcelableArrayList(MOVIE_LIST_KEY);
+            //mMovies = savedInstanceState.getParcelableArrayList(MOVIE_LIST_KEY);
         }
-
+/*
         GridView gridView = (GridView) findViewById(R.id.grid_view);
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -93,7 +89,18 @@ public class MainActivity extends AppCompatActivity
 
 
         gridView.setAdapter(mAdapter);
+*/
 
+        FragmentManager fm = getSupportFragmentManager();
+        Fragment fragment = fm.findFragmentById(R.id.fragment_holder);
+
+        if(fragment == null) {
+            fragment = MovieListFragment.newInstance(mApiKey);
+            FragmentTransaction ft = fm.beginTransaction();
+            ft.add(R.id.fragment_holder, fragment);
+            ft.addToBackStack(null);
+            ft.commit();
+        }
     }
 
     @Override
@@ -123,18 +130,10 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        String sort_by = sharedPreferences.getString(key, DEFAULT_SORT_BY_OPTION);
-        MovieUrl = buildMovieUrl(sort_by);
-        FetchMoviesTask movieTask = new FetchMoviesTask(mAdapter, mMovies);
-        movieTask.execute(MovieUrl);
-    }
-
-    private String buildMovieUrl(String sortBy) {
-        String url = MOVIEDB_END_POINT
-                + sortBy
-                + "?page="+ DEFAULT_PAGE
-                + "&api_key=" + mApiKey;
-        return url;
+        //String sort_by = sharedPreferences.getString(key, DEFAULT_SORT_BY_OPTION);
+        //MovieUrl = buildMovieUrl(sort_by);
+        //FetchMoviesTask movieTask = new FetchMoviesTask(mAdapter, mMovies);
+        //movieTask.execute(MovieUrl);
     }
 
     /**
