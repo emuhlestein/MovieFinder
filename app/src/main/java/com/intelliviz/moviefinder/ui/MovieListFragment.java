@@ -8,10 +8,12 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.GridView;
 
@@ -49,8 +51,13 @@ public class MovieListFragment extends Fragment
     private String mApiKey;
     private String mMovieUrl;
     private ArrayAdapter<Movie> mAdapter;
+    private OnSelectMovieListener mListener;
 
     @Bind(R.id.grid_view) GridView mGridView;
+
+    public interface OnSelectMovieListener {
+        public void onSelectMovie(Movie movie);
+    }
 
     public MovieListFragment() {
         // Required empty public constructor
@@ -73,6 +80,15 @@ public class MovieListFragment extends Fragment
         ButterKnife.bind(this, view);
         mAdapter = new MovieAdapter(getActivity(), mMovies);
         mGridView.setAdapter(mAdapter);
+        mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Movie movie = mMovies.get(position);
+                String rd = movie.getReleaseDate();
+                Log.d(TAG, movie.getTitle());
+                mListener.onSelectMovie(movie);
+            }
+        });
 
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
         sp.registerOnSharedPreferenceChangeListener(this);
@@ -89,24 +105,25 @@ public class MovieListFragment extends Fragment
         setHasOptionsMenu(true);
 
         mApiKey = getArguments().getString(API_KEY_KEY);
-        mMovieUrl = buildMovieUrl("popular");
-    }
 
-
-    @Override
-    public void onPause() {
-        super.onPause();
-
-        //SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        //sp.unregisterOnSharedPreferenceChangeListener(this);
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String sort_key = getResources().getString(R.string.pref_sort_by_key);
+        String sort_by = sp.getString(sort_key, DEFAULT_SORT_BY_OPTION);
+        mMovieUrl = buildMovieUrl(sort_by);
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if(context instanceof OnSelectMovieListener) {
+            mListener = (OnSelectMovieListener)context;
+        }
+    }
 
-        //SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        //sp.registerOnSharedPreferenceChangeListener(this);
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
     }
 
     @Override
@@ -165,13 +182,17 @@ public class MovieListFragment extends Fragment
     }
 
     private boolean isNetworkAvailable() {
-        ConnectivityManager manager =
-                (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = manager.getActiveNetworkInfo();
         boolean isAvailable = false;
+        FragmentActivity activity = this.getActivity();
+        if(activity != null) {
+            ConnectivityManager manager =
+                    (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo networkInfo = manager.getActiveNetworkInfo();
 
-        if(networkInfo != null && networkInfo.isConnected()) {
-            isAvailable = true;
+
+            if (networkInfo != null && networkInfo.isConnected()) {
+                isAvailable = true;
+            }
         }
         return isAvailable;
     }

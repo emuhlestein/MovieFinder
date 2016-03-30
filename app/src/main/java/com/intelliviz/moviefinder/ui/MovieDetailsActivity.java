@@ -2,9 +2,12 @@ package com.intelliviz.moviefinder.ui;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -52,7 +55,8 @@ public class MovieDetailsActivity extends Fragment {
         View view = inflater.inflate(R.layout.activity_movie_details, container, false);
         ButterKnife.bind(this, view);
 
-        getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
+        AppCompatActivity activity = (AppCompatActivity)getActivity();
+        activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         mTitleView.setText(mMovie.getTitle());
         mSummaryView.setText(mMovie.getSynopsis());
@@ -72,7 +76,7 @@ public class MovieDetailsActivity extends Fragment {
         }
 
         mReleaseDateView.setText(str);
-        mAverageVoteView.setText(new DecimalFormat("#.#").format(Float.parseFloat(mMovie.getAverageVote()))+"/10");
+        mAverageVoteView.setText(new DecimalFormat("#.#").format(Float.parseFloat(mMovie.getAverageVote())) + "/10");
 
         Picasso
                 .with(getActivity())
@@ -96,5 +100,16 @@ public class MovieDetailsActivity extends Fragment {
         setHasOptionsMenu(true);
 
         mMovie = getArguments().getParcelable(MOVIE_KEY);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                FragmentManager fm = getFragmentManager();
+                fm.popBackStack();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

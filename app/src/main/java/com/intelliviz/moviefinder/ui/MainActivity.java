@@ -2,7 +2,6 @@ package com.intelliviz.moviefinder.ui;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.os.Bundle;
@@ -30,7 +29,8 @@ import java.util.ArrayList;
  * Main activity for movie app
  */
 public class MainActivity extends AppCompatActivity
-        implements SharedPreferences.OnSharedPreferenceChangeListener {
+        implements MovieListFragment.OnSelectMovieListener,
+        SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String API_KEY_NOT_SET = "api key not set";
 
@@ -114,8 +114,14 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.action_settings) {
-            Intent settingsActivity = new Intent(this, SettingsActivity.class);
-            startActivity(settingsActivity);
+            //Intent settingsActivity = new Intent(this, SettingsActivity.class);
+            //startActivity(settingsActivity);
+            SettingsActivity fragment = SettingsActivity.newInstance();
+            FragmentManager fm = getSupportFragmentManager();
+            FragmentTransaction ft = fm.beginTransaction();
+            ft.replace(R.id.fragment_holder, fragment);
+            ft.addToBackStack(null);
+            ft.commit();
             return true;
         }
 
@@ -134,6 +140,37 @@ public class MainActivity extends AppCompatActivity
         //MovieUrl = buildMovieUrl(sort_by);
         //FetchMoviesTask movieTask = new FetchMoviesTask(mAdapter, mMovies);
         //movieTask.execute(MovieUrl);
+    }
+
+    @Override
+    public void onSelectMovie(Movie movie) {
+        Fragment fragment = MovieDetailsActivity.newInstance(movie);
+        FragmentManager fm = getSupportFragmentManager();
+        FragmentTransaction ft = fm.beginTransaction();
+        ft.replace(R.id.fragment_holder, fragment);
+        ft.addToBackStack(null);
+        ft.commit();
+    }
+
+    /**
+     * Apparently this has to be here so that the last transactions are popped off at once.
+     */
+    @Override
+    public void onBackPressed() {
+        FragmentManager fm;
+        fm = getSupportFragmentManager();
+
+        int count = fm.getBackStackEntryCount();
+        if(count > 0) {
+            // popBackStack is asynchronous -- it enqueues the request to pop, but the action will
+            // not be performed until the application returns to its event loop. -Android Docs.
+            fm.popBackStack();
+            if(count == 1) {
+                super.onBackPressed();
+            }
+        } else {
+            super.onBackPressed();
+        }
     }
 
     /**
@@ -180,4 +217,6 @@ public class MainActivity extends AppCompatActivity
         });
         builder.show();
     }
+
+
 }
