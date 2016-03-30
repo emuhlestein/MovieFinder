@@ -11,10 +11,10 @@ import com.intelliviz.moviefinder.R;
 /**
  * Settings activity. Manage user setttings.
  */
-public class SettingsActivity extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener{
+public class SettingsFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener{
 
-    public static SettingsActivity newInstance() {
-        SettingsActivity fragment = new SettingsActivity();
+    public static SettingsFragment newInstance() {
+        SettingsFragment fragment = new SettingsFragment();
         return fragment;
     }
 

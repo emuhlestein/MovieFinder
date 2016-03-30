@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Movie movie = mMovies.get(position);
 
-                Intent intent = new Intent(MainActivity.this, MovieDetailsActivity.class);
+                Intent intent = new Intent(MainActivity.this, MovieDetailsFragment.class);
                 intent.putExtra(MOVIE_EXTRA, movie);
                 startActivity(intent);
             }
@@ -114,9 +114,9 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.action_settings) {
-            //Intent settingsActivity = new Intent(this, SettingsActivity.class);
+            //Intent settingsActivity = new Intent(this, SettingsFragment.class);
             //startActivity(settingsActivity);
-            SettingsActivity fragment = SettingsActivity.newInstance();
+            SettingsFragment fragment = SettingsFragment.newInstance();
             FragmentManager fm = getSupportFragmentManager();
             FragmentTransaction ft = fm.beginTransaction();
             ft.replace(R.id.fragment_holder, fragment);
@@ -144,7 +144,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onSelectMovie(Movie movie) {
-        Fragment fragment = MovieDetailsActivity.newInstance(movie);
+        Fragment fragment = MovieDetailsFragment.newInstance(movie);
         FragmentManager fm = getSupportFragmentManager();
         FragmentTransaction ft = fm.beginTransaction();
         ft.replace(R.id.fragment_holder, fragment);

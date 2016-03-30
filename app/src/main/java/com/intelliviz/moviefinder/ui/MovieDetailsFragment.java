@@ -28,8 +28,8 @@ import butterknife.ButterKnife;
 /**
  * Details activity. Show the details of a selected movie.
  */
-public class MovieDetailsActivity extends Fragment {
-    private static final String TAG = MovieDetailsActivity.class.getSimpleName();
+public class MovieDetailsFragment extends Fragment {
+    private static final String TAG = MovieDetailsFragment.class.getSimpleName();
     private static final String MOVIE_KEY = "movie_key";
     private Movie mMovie;
 
@@ -39,11 +39,11 @@ public class MovieDetailsActivity extends Fragment {
     @Bind(R.id.releaseDateView) TextView mReleaseDateView;
     @Bind(R.id.averageVoteView) TextView mAverageVoteView;
 
-    public static MovieDetailsActivity newInstance(Movie movie) {
+    public static MovieDetailsFragment newInstance(Movie movie) {
         Bundle args = new Bundle();
 
         args.putParcelable(MOVIE_KEY, movie);
-        MovieDetailsActivity fragment = new MovieDetailsActivity();
+        MovieDetailsFragment fragment = new MovieDetailsFragment();
         fragment.setArguments(args);
         return fragment;
     }
