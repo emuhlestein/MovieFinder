@@ -2,8 +2,6 @@ package com.intelliviz.moviefinder.ui;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.SharedPreferences;
-import android.content.res.AssetManager;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -13,16 +11,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 
+import com.intelliviz.moviefinder.ApiKeyMgr;
 import com.intelliviz.moviefinder.Movie;
 import com.intelliviz.moviefinder.R;
+import com.intelliviz.moviefinder.Review;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 /**
@@ -30,7 +23,7 @@ import java.util.ArrayList;
  */
 public class MainActivity extends AppCompatActivity
         implements MovieListFragment.OnSelectMovieListener,
-        SharedPreferences.OnSharedPreferenceChangeListener {
+        MovieDetailsFragment.OnSelectReviewListener {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String API_KEY_NOT_SET = "api key not set";
 
@@ -40,7 +33,7 @@ public class MainActivity extends AppCompatActivity
     public static final String PosterUrl = "http://image.tmdb.org/t/p/w185%s";
     public static final String MOVIE_EXTRA = "movie_info";
     private ArrayList<Movie> mMovies = new ArrayList<>();
-    private String mApiKey = API_KEY_NOT_SET; // Put api key here;
+    private String API_KEY = null; // Put api key here;
     ArrayAdapter<Movie> mAdapter;
 
     @Override
@@ -48,54 +41,15 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fragment);
 
-        mApiKey = getApiKey();
-        if(mApiKey == null) {
-            if(mApiKey.equals(API_KEY_NOT_SET)) {
-                fatalError();
-            }
+        if(!ApiKeyMgr.checkApiKey(this, API_KEY)) {
+            fatalError();
         }
-
-        //SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-        //sp.registerOnSharedPreferenceChangeListener(this);
-        //String sort_key = getResources().getString(R.string.pref_sort_by_key);
-        /*
-        String sort_by = sp.getString(sort_key, DEFAULT_SORT_BY_OPTION);
-        if(sort_by == null) {
-            MovieUrl = buildMovieUrl(DEFAULT_SORT_BY_OPTION);
-        } else {
-            MovieUrl = buildMovieUrl(sort_by);
-        }
-        */
-
-        if(savedInstanceState == null || !savedInstanceState.containsKey(MOVIE_LIST_KEY)) {
-            //mAdapter = new MovieAdapter(this, mMovies);
-            //FetchMoviesTask movieTask = new FetchMoviesTask(mAdapter, mMovies);
-            //movieTask.execute(MovieUrl);
-        } else {
-            //mMovies = savedInstanceState.getParcelableArrayList(MOVIE_LIST_KEY);
-        }
-/*
-        GridView gridView = (GridView) findViewById(R.id.grid_view);
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Movie movie = mMovies.get(position);
-
-                Intent intent = new Intent(MainActivity.this, MovieDetailsFragment.class);
-                intent.putExtra(MOVIE_EXTRA, movie);
-                startActivity(intent);
-            }
-        });
-
-
-        gridView.setAdapter(mAdapter);
-*/
 
         FragmentManager fm = getSupportFragmentManager();
         Fragment fragment = fm.findFragmentById(R.id.fragment_holder);
 
         if(fragment == null) {
-            fragment = MovieListFragment.newInstance(mApiKey);
+            fragment = MovieListFragment.newInstance();
             FragmentTransaction ft = fm.beginTransaction();
             ft.add(R.id.fragment_holder, fragment);
             ft.addToBackStack(null);
@@ -114,8 +68,6 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.action_settings) {
-            //Intent settingsActivity = new Intent(this, SettingsFragment.class);
-            //startActivity(settingsActivity);
             SettingsFragment fragment = SettingsFragment.newInstance();
             FragmentManager fm = getSupportFragmentManager();
             FragmentTransaction ft = fm.beginTransaction();
@@ -135,16 +87,18 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        //String sort_by = sharedPreferences.getString(key, DEFAULT_SORT_BY_OPTION);
-        //MovieUrl = buildMovieUrl(sort_by);
-        //FetchMoviesTask movieTask = new FetchMoviesTask(mAdapter, mMovies);
-        //movieTask.execute(MovieUrl);
+    public void onSelectMovie(Movie movie) {
+        Fragment fragment = MovieDetailsFragment.newInstance(movie);
+        FragmentManager fm = getSupportFragmentManager();
+        FragmentTransaction ft = fm.beginTransaction();
+        ft.replace(R.id.fragment_holder, fragment);
+        ft.addToBackStack(null);
+        ft.commit();
     }
 
     @Override
-    public void onSelectMovie(Movie movie) {
-        Fragment fragment = MovieDetailsFragment.newInstance(movie);
+    public void onSelectReview(Review review) {
+        Fragment fragment = MovieReviewFragment.newInstance(review);
         FragmentManager fm = getSupportFragmentManager();
         FragmentTransaction ft = fm.beginTransaction();
         ft.replace(R.id.fragment_holder, fragment);
@@ -171,35 +125,6 @@ public class MainActivity extends AppCompatActivity
         } else {
             super.onBackPressed();
         }
-    }
-
-    /**
-     * Get the api key from an external file: api_key.json located in the assets directory.
-     * File is not under source code control. It is listed in .gitignore.
-     * @return The api key, if found. Otherwise, null.
-     */
-    private String getApiKey() {
-        AssetManager assetManager = getAssets();
-        try {
-            InputStream in = assetManager.open("api_key.json");
-            InputStreamReader inputStream = new InputStreamReader(in);
-            BufferedReader reader = new BufferedReader(inputStream);
-            StringBuffer buffer = new StringBuffer();
-            String line;
-            while((line = reader.readLine()) != null) {
-                buffer.append(line+"\n");
-            }
-
-            JSONObject obj = new JSONObject(buffer.toString());
-            String api_key = obj.getString("api_key");
-            return api_key;
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        return null;
     }
 
     /**

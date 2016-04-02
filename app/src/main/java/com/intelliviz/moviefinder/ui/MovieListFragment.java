@@ -1,6 +1,7 @@
 package com.intelliviz.moviefinder.ui;
 
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
@@ -8,7 +9,6 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,6 +17,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.GridView;
 
+import com.intelliviz.moviefinder.ApiKeyMgr;
 import com.intelliviz.moviefinder.Movie;
 import com.intelliviz.moviefinder.MovieAdapter;
 import com.intelliviz.moviefinder.R;
@@ -43,32 +44,24 @@ import butterknife.ButterKnife;
 public class MovieListFragment extends Fragment
         implements SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = MovieListFragment.class.getSimpleName();
-    private static final String API_KEY_KEY = "api_key";
-    private static final String DEFAULT_PAGE = "1";
     private static final String DEFAULT_SORT_BY_OPTION = "popular";
-    private static final String MOVIEDB_END_POINT = "https://api.themoviedb.org/3/movie/";
     List<Movie> mMovies = new ArrayList<>();
-    private String mApiKey;
-    private String mMovieUrl;
+    private String mMovieUrls;
     private ArrayAdapter<Movie> mAdapter;
     private OnSelectMovieListener mListener;
 
     @Bind(R.id.grid_view) GridView mGridView;
 
     public interface OnSelectMovieListener {
-        public void onSelectMovie(Movie movie);
+        void onSelectMovie(Movie movie);
     }
 
     public MovieListFragment() {
         // Required empty public constructor
     }
 
-    public static Fragment newInstance(String apiKey) {
-        Bundle args = new Bundle();
-
-        args.putString(API_KEY_KEY, apiKey);
+    public static Fragment newInstance() {
         Fragment fragment = new MovieListFragment();
-        fragment.setArguments(args);
         return fragment;
     }
 
@@ -104,12 +97,10 @@ public class MovieListFragment extends Fragment
         // causes onCreateOptionMenu to get called
         setHasOptionsMenu(true);
 
-        mApiKey = getArguments().getString(API_KEY_KEY);
-
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
         String sort_key = getResources().getString(R.string.pref_sort_by_key);
         String sort_by = sp.getString(sort_key, DEFAULT_SORT_BY_OPTION);
-        mMovieUrl = buildMovieUrl(sort_by);
+        mMovieUrls = ApiKeyMgr.getMoviesUrl(sort_by);
     }
 
     @Override
@@ -127,19 +118,24 @@ public class MovieListFragment extends Fragment
     }
 
     @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         String sort_by = sharedPreferences.getString(key, DEFAULT_SORT_BY_OPTION);
-        mMovieUrl = buildMovieUrl(sort_by);
+        mMovieUrls = ApiKeyMgr.getMoviesUrl(sort_by);
         getMovies();
         mAdapter.notifyDataSetChanged();
     }
 
     private void getMovies() {
 
-        if(isNetworkAvailable()) {
+        if(isNetworkAvailable(getActivity())) {
             OkHttpClient client = new OkHttpClient();
             Request request = new Request.Builder()
-                    .url(mMovieUrl)
+                    .url(mMovieUrls)
                     .build();
 
             Call call = client.newCall(request);
@@ -173,20 +169,11 @@ public class MovieListFragment extends Fragment
         mAdapter.notifyDataSetChanged();
     }
 
-    private String buildMovieUrl(String sortBy) {
-        String url = MOVIEDB_END_POINT
-                + sortBy
-                + "?page="+ DEFAULT_PAGE
-                + "&api_key=" + mApiKey;
-        return url;
-    }
-
-    private boolean isNetworkAvailable() {
+    public static boolean isNetworkAvailable(Activity activity) {
         boolean isAvailable = false;
-        FragmentActivity activity = this.getActivity();
         if(activity != null) {
             ConnectivityManager manager =
-                    (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+                    (ConnectivityManager) activity.getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo networkInfo = manager.getActiveNetworkInfo();
 
 

@@ -68,5 +68,12 @@
             android:paddingRight="@dimen/activity_horizontal_margin"
             android:textSize="@dimen/detail_text_size"
             tools:text="Movie summary" />
+        <LinearLayout
+            android:id="@+id/review_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/summaryView"
+            android:orientation="vertical">
+        </LinearLayout>
     </RelativeLayout>
 </ScrollView>
