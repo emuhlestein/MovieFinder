@@ -21,6 +21,7 @@ import com.intelliviz.moviefinder.ApiKeyMgr;
 import com.intelliviz.moviefinder.Movie;
 import com.intelliviz.moviefinder.R;
 import com.intelliviz.moviefinder.Review;
+import com.intelliviz.moviefinder.Trailer;
 import com.squareup.okhttp.Call;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.OkHttpClient;
@@ -51,6 +52,7 @@ public class MovieDetailsFragment extends Fragment {
     private static final String MOVIE_KEY = "movie_key";
     private Movie mMovie;
     private List<Review> mReviews;
+    private List<Trailer> mTrailers;
     private String mMovieUrl;
     private TextView[] mReviewViews;
     private OnSelectReviewListener mListener;
@@ -60,11 +62,13 @@ public class MovieDetailsFragment extends Fragment {
     @Bind(R.id.titleView) TextView mTitleView;
     @Bind(R.id.summaryView) TextView mSummaryView;
     @Bind(R.id.releaseDateView) TextView mReleaseDateView;
+    @Bind(R.id.runtimeView) TextView mRuntimeView;
     @Bind(R.id.averageVoteView) TextView mAverageVoteView;
     @Bind(R.id.review_layout) LinearLayout mReviewLayout;
 
     public interface OnSelectReviewListener {
         void onSelectReview(Review review);
+        void onSelectTrailer(Trailer trailer);
     }
 
     public static MovieDetailsFragment newInstance(Movie movie) {
@@ -80,7 +84,7 @@ public class MovieDetailsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                 Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.activity_movie_details, container, false);
+        View view = inflater.inflate(R.layout.fragment_movie_details, container, false);
         ButterKnife.bind(this, view);
 
         AppCompatActivity activity = (AppCompatActivity)getActivity();
@@ -113,6 +117,7 @@ public class MovieDetailsFragment extends Fragment {
 
         getMovie();
         getReviews();
+        getTrailers();
 
         //createReviewViews();
 
@@ -201,6 +206,47 @@ public class MovieDetailsFragment extends Fragment {
         }
     }
 
+    private void getTrailers() {
+        String url = ApiKeyMgr.getTrailersUrl(mMovie.getId());
+
+        // TODO put network somewhere else
+        if(MovieListFragment.isNetworkAvailable(getActivity())) {
+            OkHttpClient client = new OkHttpClient();
+            Request request = new Request.Builder()
+                    .url(url)
+                    .build();
+
+            Call call = client.newCall(request);
+            call.enqueue(new Callback() {
+                @Override
+                public void onFailure(Request request, IOException e) {
+
+                }
+
+                @Override
+                public void onResponse(Response response) throws IOException {
+                    String jsonData = response.body().string();
+                    JSONObject trailersObject;
+
+                    extractTrailersFromJson(jsonData);
+
+                    if (response.isSuccessful()) {
+
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                createTrailerViews();
+                            }
+                        });
+
+                    }
+                }
+            });
+        } else {
+            // network is unavailable
+        }
+    }
+
     private void getMovie() {
 
         if(MovieListFragment.isNetworkAvailable(getActivity())) {
@@ -222,21 +268,18 @@ public class MovieDetailsFragment extends Fragment {
                     JSONObject moviesObject;
                     try {
                         moviesObject = new JSONObject(jsonData);
-                        Log.d(TAG, moviesObject.getString("runtime"));
+                        mMovie.setRuntime(moviesObject.getString("runtime"));
                     } catch (JSONException e) {
                         e.printStackTrace();
                         return;
                     }
                     if (response.isSuccessful()) {
-
-                        //mMovies = extractMoviesFromJson(jsonData);
-                        //getActivity().runOnUiThread(new Runnable() {
-                        //    @Override
-                        //    public void run() {
-                        //        updateDisplay();
-                        //    }
-                        //});
-
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mRuntimeView.setText(mMovie.getRuntime()+"min");
+                            }
+                        });
                     }
                 }
             });
@@ -270,6 +313,42 @@ public class MovieDetailsFragment extends Fragment {
         return new ArrayList<>();
     }
 
+    private List<Review> extractTrailersFromJson(String jsonData) {
+        JSONObject trailersObject = null;
+        try {
+            mTrailers = new ArrayList<>();
+            JSONObject oneTrailer;
+            trailersObject = new JSONObject(jsonData);
+            JSONArray trailerArray = trailersObject.getJSONArray("results");
+            Trailer trailer;
+            for(int i = 0; i < trailerArray.length(); i++) {
+                oneTrailer = trailerArray.getJSONObject(i);
+                trailer = extractTrailerFromJson(oneTrailer);
+                if(trailer != null) {
+                    mTrailers.add(trailer);
+                }
+            }
+
+            return null;
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
+    }
+
+    private Trailer extractTrailerFromJson(JSONObject object) {
+        try {
+            String key = object.getString("key");
+            String url = "https://www.youtube.com/watch?v=" + key;
+            Trailer trailer = new Trailer(url);
+            return trailer;
+        } catch (JSONException e) {
+            Log.e(TAG, "Error reading trailer");
+        }
+
+        return null;
+    }
+
     private Review extractReviewFromJson(JSONObject object) {
         try {
             String author = object.getString("author");
@@ -284,8 +363,6 @@ public class MovieDetailsFragment extends Fragment {
     }
 
     private void createReviewViews() {
-        mReviewLayout.removeAllViews();
-
         if(mReviews == null || mReviews.size() == 0) {
             return;
         }
@@ -303,17 +380,50 @@ public class MovieDetailsFragment extends Fragment {
         // are those of the parent. View will have the textview. It has to be added
         // manually, so return it.
         Button view = (Button) inflater.inflate(R.layout.review_item_layout, mReviewLayout, false);
-        view.setText("Review " + num);
+        view.setText("Review " + (num+1));
         view.setTag(num);
         view.setOnClickListener(new View.OnClickListener() {
-           @Override
-           public void onClick(View v) {
-               if(mListener != null) {
-                   int num = (int) v.getTag();
-                   mListener.onSelectReview(mReviews.get(num));
-               }
-           }
-       });
+            @Override
+            public void onClick(View v) {
+                if (mListener != null) {
+                    int num = (int) v.getTag();
+                    mListener.onSelectReview(mReviews.get(num));
+                }
+            }
+        });
+
+        return view;
+    }
+
+    private void createTrailerViews() {
+        if(mTrailers == null || mTrailers.size() == 0) {
+            return;
+        }
+
+        for(int i = 0; i < mTrailers.size(); i++) {
+            View view = createTrailerRow(i);
+            mReviewLayout.addView(view);
+        }
+    }
+
+    private View createTrailerRow(int num) {
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+
+        // With false as 3rd parameter, view is not added to parent, but the layourparams
+        // are those of the parent. View will have the textview. It has to be added
+        // manually, so return it.
+        Button view = (Button) inflater.inflate(R.layout.review_item_layout, mReviewLayout, false);
+        view.setText("Trailer " + (num+1));
+        view.setTag(num);
+        view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mListener != null) {
+                    int num = (int) v.getTag();
+                    mListener.onSelectTrailer(mTrailers.get(num));
+                }
+            }
+        });
 
         return view;
     }

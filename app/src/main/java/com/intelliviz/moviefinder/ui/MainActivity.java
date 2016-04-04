@@ -2,6 +2,8 @@ package com.intelliviz.moviefinder.ui;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -15,6 +17,7 @@ import com.intelliviz.moviefinder.ApiKeyMgr;
 import com.intelliviz.moviefinder.Movie;
 import com.intelliviz.moviefinder.R;
 import com.intelliviz.moviefinder.Review;
+import com.intelliviz.moviefinder.Trailer;
 
 import java.util.ArrayList;
 
@@ -104,6 +107,13 @@ public class MainActivity extends AppCompatActivity
         ft.replace(R.id.fragment_holder, fragment);
         ft.addToBackStack(null);
         ft.commit();
+    }
+
+    @Override
+    public void onSelectTrailer(Trailer trailer) {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(Uri.parse(trailer.getUrl()));
+        startActivity(intent);
     }
 
     /**

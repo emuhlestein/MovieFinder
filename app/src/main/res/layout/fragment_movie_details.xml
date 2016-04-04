@@ -36,26 +36,49 @@
             android:adjustViewBounds="true"/>
 
         <TextView
-            android:id="@+id/releaseDateView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/titleView"
-            android:layout_marginLeft="@dimen/left_margin"
-            android:layout_marginTop="@dimen/activity_vertical_margin"
-            android:layout_toRightOf="@id/posterView"
-            android:textSize="@dimen/release_date_text_size"
-            tools:text="Release Date" />
+        android:id="@+id/releaseDateView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/titleView"
+        android:layout_marginLeft="@dimen/left_margin"
+        android:layout_marginTop="@dimen/activity_vertical_margin"
+        android:layout_toRightOf="@id/posterView"
+        android:textSize="@dimen/release_date_text_size"
+        tools:text="Release Date" />
 
         <TextView
-            android:id="@+id/averageVoteView"
-            android:layout_width="match_parent"
+            android:id="@+id/runtimeView"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/releaseDateView"
             android:layout_marginLeft="@dimen/left_margin"
             android:layout_marginTop="@dimen/ave_vote_top_margin"
             android:layout_toRightOf="@id/posterView"
+            android:textSize="@dimen/release_date_text_size"
+            tools:text="120min" />
+
+        <TextView
+            android:id="@+id/averageVoteView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/runtimeView"
+            android:layout_marginLeft="@dimen/left_margin"
+            android:layout_marginTop="@dimen/ave_vote_top_margin"
+            android:layout_toRightOf="@id/posterView"
             android:textSize="@dimen/detail_text_size"
             tools:text="Release Date" />
+
+        <Button
+            android:id="@+id/addToFavoritesButton"
+            android:text="MARK AS\nFAVORITE"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/averageVoteView"
+            android:layout_marginLeft="@dimen/left_margin"
+            android:layout_marginTop="@dimen/ave_vote_top_margin"
+            android:layout_toRightOf="@id/posterView"
+            android:textSize="@dimen/detail_text_size"
+            tools:text="Add to favorites" />
 
         <TextView
             android:id="@+id/summaryView"

@@ -16,6 +16,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.GridView;
+import android.widget.TextView;
 
 import com.intelliviz.moviefinder.ApiKeyMgr;
 import com.intelliviz.moviefinder.Movie;
@@ -49,8 +50,11 @@ public class MovieListFragment extends Fragment
     private String mMovieUrls;
     private ArrayAdapter<Movie> mAdapter;
     private OnSelectMovieListener mListener;
+    private TextView mEmptyView;
+    private String mSortBy;
 
     @Bind(R.id.grid_view) GridView mGridView;
+
 
     public interface OnSelectMovieListener {
         void onSelectMovie(Movie movie);
@@ -71,6 +75,7 @@ public class MovieListFragment extends Fragment
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_movie_list, container, false);
         ButterKnife.bind(this, view);
+
         mAdapter = new MovieAdapter(getActivity(), mMovies);
         mGridView.setAdapter(mAdapter);
         mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -82,6 +87,9 @@ public class MovieListFragment extends Fragment
                 mListener.onSelectMovie(movie);
             }
         });
+
+        mEmptyView = (TextView) view.findViewById(android.R.id.empty);
+        mGridView.setEmptyView(mEmptyView);
 
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
         sp.registerOnSharedPreferenceChangeListener(this);
@@ -99,8 +107,8 @@ public class MovieListFragment extends Fragment
 
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
         String sort_key = getResources().getString(R.string.pref_sort_by_key);
-        String sort_by = sp.getString(sort_key, DEFAULT_SORT_BY_OPTION);
-        mMovieUrls = ApiKeyMgr.getMoviesUrl(sort_by);
+        mSortBy = sp.getString(sort_key, DEFAULT_SORT_BY_OPTION);
+        mMovieUrls = ApiKeyMgr.getMoviesUrl(mSortBy);
     }
 
     @Override
@@ -124,44 +132,52 @@ public class MovieListFragment extends Fragment
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        String sort_by = sharedPreferences.getString(key, DEFAULT_SORT_BY_OPTION);
-        mMovieUrls = ApiKeyMgr.getMoviesUrl(sort_by);
-        getMovies();
+        mSortBy = sharedPreferences.getString(key, DEFAULT_SORT_BY_OPTION);
+        if(mSortBy.equals("favorite")) {
+            mMovies.clear();
+        } else {
+            mMovieUrls = ApiKeyMgr.getMoviesUrl(mSortBy);
+            getMovies();
+        }
         mAdapter.notifyDataSetChanged();
     }
 
     private void getMovies() {
 
-        if(isNetworkAvailable(getActivity())) {
-            OkHttpClient client = new OkHttpClient();
-            Request request = new Request.Builder()
-                    .url(mMovieUrls)
-                    .build();
+        if(mSortBy.equals("favorite")) {
 
-            Call call = client.newCall(request);
-            call.enqueue(new Callback() {
-                @Override
-                public void onFailure(Request request, IOException e) {
+        } else {
+            if(isNetworkAvailable(getActivity())) {
+                OkHttpClient client = new OkHttpClient();
+                Request request = new Request.Builder()
+                        .url(mMovieUrls)
+                        .build();
 
-                }
-
-                @Override
-                public void onResponse(Response response) throws IOException {
-                    String jsonData = response.body().string();
-                    if (response.isSuccessful()) {
-                        mMovies = extractMoviesFromJson(jsonData);
-                        getActivity().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                updateDisplay();
-                            }
-                        });
+                Call call = client.newCall(request);
+                call.enqueue(new Callback() {
+                    @Override
+                    public void onFailure(Request request, IOException e) {
 
                     }
-                }
-            });
-        } else {
-            // network is unavailable
+
+                    @Override
+                    public void onResponse(Response response) throws IOException {
+                        String jsonData = response.body().string();
+                        if (response.isSuccessful()) {
+                            mMovies = extractMoviesFromJson(jsonData);
+                            getActivity().runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    updateDisplay();
+                                }
+                            });
+
+                        }
+                    }
+                });
+            } else {
+                // network is unavailable
+            }
         }
     }
 

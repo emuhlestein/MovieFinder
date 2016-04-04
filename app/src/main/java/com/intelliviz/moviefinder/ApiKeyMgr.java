@@ -62,6 +62,14 @@ public class ApiKeyMgr {
         return url;
     }
 
+    public static String getTrailersUrl(String id) {
+        String url = MOVIEDB_END_POINT
+                + id
+                + "/videos"
+                + "?api_key=" + mApiKey;
+        return url;
+    }
+
     /**
      * Get the api key from an external file: api_key.json located in the assets directory.
      * File is not under source code control. It is listed in .gitignore.
