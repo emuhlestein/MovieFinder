@@ -65,10 +65,12 @@ public class MovieDetailsFragment extends Fragment {
     @Bind(R.id.runtimeView) TextView mRuntimeView;
     @Bind(R.id.averageVoteView) TextView mAverageVoteView;
     @Bind(R.id.review_layout) LinearLayout mReviewLayout;
+    @Bind(R.id.addToFavoritesButton) Button mAddToFavoriteButton;
 
     public interface OnSelectReviewListener {
         void onSelectReview(Review review);
         void onSelectTrailer(Trailer trailer);
+        void onAddMovieToFavorite(Movie movie);
     }
 
     public static MovieDetailsFragment newInstance(Movie movie) {
@@ -94,7 +96,14 @@ public class MovieDetailsFragment extends Fragment {
         mSummaryView.setText(mMovie.getSynopsis());
         mReleaseDateView.setText(mMovie.getReleaseDate());
 
-        String url = String.format(MainActivity.PosterUrl, mMovie.getPoster());
+        mAddToFavoriteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onAddMovieClick(v);
+            }
+        });
+
+        String url = String.format(ApiKeyMgr.PosterUrl, mMovie.getPoster());
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-mm-dd");
         String str = mMovie.getReleaseDate();
@@ -165,6 +174,12 @@ public class MovieDetailsFragment extends Fragment {
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void onAddMovieClick(View view) {
+        if(mListener != null) {
+            mListener.onAddMovieToFavorite(mMovie);
+        }
     }
 
     private void getReviews() {

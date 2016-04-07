@@ -1,22 +1,51 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout  xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/frameView"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
-    <GridView
-        android:id="@+id/grid_view"
+    android:layout_height="match_parent">
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:horizontalSpacing="0dp"
-        android:verticalSpacing="0dp"
-        android:columnWidth="@dimen/grid_column_width"
-        android:numColumns="auto_fit"
-        android:stretchMode="columnWidth">
-    </GridView>
-    <TextView
-        android:id="@android:id/empty"
+        android:id="@+id/firstLayoutView"
+        android:orientation="vertical">
+        <GridView
+            android:id="@+id/firstGridView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:horizontalSpacing="0dp"
+            android:verticalSpacing="0dp"
+            android:columnWidth="@dimen/grid_column_width"
+            android:numColumns="auto_fit"
+            android:stretchMode="columnWidth">
+        </GridView>
+        <TextView
+            android:id="@+id/firstEmptyView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textSize="22sp"
+            android:gravity="center"
+            android:text="No Results"/>
+    </LinearLayout>
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:textSize="22sp"
-        android:gravity="center"
-        android:text="No Results"/>
-</LinearLayout>
+        android:id="@+id/secondLayoutView"
+        android:orientation="vertical">
+        <GridView
+            android:id="@+id/secondGridView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:horizontalSpacing="0dp"
+            android:verticalSpacing="0dp"
+            android:columnWidth="@dimen/grid_column_width"
+            android:numColumns="auto_fit"
+            android:stretchMode="columnWidth">
+        </GridView>
+        <TextView
+            android:id="@+id/secondEmptyView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textSize="22sp"
+            android:gravity="center"
+            android:text="No Results"/>
+    </LinearLayout>
+</FrameLayout>

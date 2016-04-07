@@ -18,6 +18,7 @@ import java.io.InputStreamReader;
 public class ApiKeyMgr {
     private static final String TAG = ApiKeyMgr.class.getSimpleName();
     private static final String MOVIEDB_END_POINT = "https://api.themoviedb.org/3/movie/";
+    public static final String PosterUrl = "http://image.tmdb.org/t/p/w185%s";
     private static final String API_KEY_NOT_SET = "api key not set";
     private static final String DEFAULT_PAGE = "1";
     private static String mApiKey = API_KEY_NOT_SET;

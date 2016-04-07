@@ -4,24 +4,34 @@ package com.intelliviz.moviefinder.ui;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.FrameLayout;
 import android.widget.GridView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.intelliviz.moviefinder.ApiKeyMgr;
+import com.intelliviz.moviefinder.FavoriteMovieCursorAdapter;
 import com.intelliviz.moviefinder.Movie;
 import com.intelliviz.moviefinder.MovieAdapter;
 import com.intelliviz.moviefinder.R;
+import com.intelliviz.moviefinder.db.MovieContract;
 import com.squareup.okhttp.Call;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.OkHttpClient;
@@ -42,22 +52,31 @@ import butterknife.ButterKnife;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class MovieListFragment extends Fragment
-        implements SharedPreferences.OnSharedPreferenceChangeListener {
+public class MovieListFragment extends Fragment implements
+        SharedPreferences.OnSharedPreferenceChangeListener,
+        LoaderManager.LoaderCallbacks<Cursor> {
     private static final String TAG = MovieListFragment.class.getSimpleName();
     private static final String DEFAULT_SORT_BY_OPTION = "popular";
+    private static final int MOVIE_ITEM_LOADER = 0;
     List<Movie> mMovies = new ArrayList<>();
     private String mMovieUrls;
-    private ArrayAdapter<Movie> mAdapter;
+    private ArrayAdapter<Movie> mPopularAdapter;
+    FavoriteMovieCursorAdapter mFavoriteMovieCursorAdapter;
     private OnSelectMovieListener mListener;
-    private TextView mEmptyView;
     private String mSortBy;
 
-    @Bind(R.id.grid_view) GridView mGridView;
+    @Bind(R.id.frameView) FrameLayout mViewSwitcher;
+    @Bind(R.id.firstLayoutView) LinearLayout mFavoriteView;
+    @Bind(R.id.firstGridView) GridView mFavoriteGridView;
+    @Bind(R.id.firstEmptyView) TextView mFavoriteEmptyView;
+    @Bind(R.id.secondLayoutView) LinearLayout mPopularView;
+    @Bind(R.id.secondGridView) GridView mPopularGridView;
+    @Bind(R.id.secondEmptyView) TextView mPopularEmptyView;
 
 
     public interface OnSelectMovieListener {
         void onSelectMovie(Movie movie);
+        void onSortOnFavorite();
     }
 
     public MovieListFragment() {
@@ -76,9 +95,9 @@ public class MovieListFragment extends Fragment
         View view = inflater.inflate(R.layout.fragment_movie_list, container, false);
         ButterKnife.bind(this, view);
 
-        mAdapter = new MovieAdapter(getActivity(), mMovies);
-        mGridView.setAdapter(mAdapter);
-        mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        mPopularAdapter = new MovieAdapter(getActivity(), mMovies);
+        mPopularGridView.setAdapter(mPopularAdapter);
+        mPopularGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Movie movie = mMovies.get(position);
@@ -88,13 +107,31 @@ public class MovieListFragment extends Fragment
             }
         });
 
-        mEmptyView = (TextView) view.findViewById(android.R.id.empty);
-        mGridView.setEmptyView(mEmptyView);
+        mPopularGridView.setEmptyView(mPopularEmptyView);
+
+        mFavoriteMovieCursorAdapter = new FavoriteMovieCursorAdapter(getActivity(), null);
+        mFavoriteGridView.setAdapter(mFavoriteMovieCursorAdapter);
+        mFavoriteGridView.setEmptyView(mFavoriteEmptyView);
+
+        Log.d(TAG, "Count: " + mViewSwitcher.getChildCount());
 
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
         sp.registerOnSharedPreferenceChangeListener(this);
 
+        String sort_key = getResources().getString(R.string.pref_sort_by_key);
+        mSortBy = sp.getString(sort_key, DEFAULT_SORT_BY_OPTION);
+        if(mSortBy.equals("favorite")) {
+            mFavoriteView.setVisibility(View.VISIBLE);
+            mPopularView.setVisibility(View.GONE);
+        } else {
+            mFavoriteView.setVisibility(View.GONE);
+            mPopularView.setVisibility(View.VISIBLE);
+        }
+
+        getLoaderManager().initLoader(MOVIE_ITEM_LOADER, null, this);
         getMovies();
+
+
         return view;
     }
 
@@ -133,14 +170,57 @@ public class MovieListFragment extends Fragment
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         mSortBy = sharedPreferences.getString(key, DEFAULT_SORT_BY_OPTION);
+
         if(mSortBy.equals("favorite")) {
-            mMovies.clear();
+            mFavoriteView.setVisibility(View.VISIBLE);
+            mPopularView.setVisibility(View.GONE);
         } else {
+            mFavoriteView.setVisibility(View.GONE);
+            mPopularView.setVisibility(View.VISIBLE);
             mMovieUrls = ApiKeyMgr.getMoviesUrl(mSortBy);
             getMovies();
         }
-        mAdapter.notifyDataSetChanged();
     }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int loaderId, Bundle args) {
+        Loader<Cursor> loader;
+        Uri uri = MovieContract.MovieEntry.CONTENT_URI;
+        switch (loaderId) {
+            case MOVIE_ITEM_LOADER:
+                loader = new CursorLoader(getActivity(),
+                        uri,
+                        new String[]
+                                {
+                                        MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry._ID,
+                                        MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry.COLUMN_TITLE,
+                                        MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry.COLUMN_SYNOPSIS,
+                                        MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry.COLUMN_RELEASE_DATA,
+                                        MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry.COLUMN_POSTER,
+                                        MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry.COLUMN_AVERAGE_VOTE,
+                                        MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry.COLUMN_MOVIE_ID,
+                                },
+                        null,
+                        null,
+                        null);
+                break;
+            default:
+                loader = null;
+        }
+
+        return loader;
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+        mFavoriteMovieCursorAdapter.swapCursor(cursor);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        mFavoriteMovieCursorAdapter.swapCursor(null);
+    }
+
 
     private void getMovies() {
 
@@ -165,6 +245,9 @@ public class MovieListFragment extends Fragment
                         String jsonData = response.body().string();
                         if (response.isSuccessful()) {
                             mMovies = extractMoviesFromJson(jsonData);
+                            if(getActivity() == null) {
+                                Toast.makeText(getActivity(), "Activity is null", Toast.LENGTH_SHORT).show();
+                            }
                             getActivity().runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -182,7 +265,7 @@ public class MovieListFragment extends Fragment
     }
 
     private void updateDisplay() {
-        mAdapter.notifyDataSetChanged();
+        mPopularAdapter.notifyDataSetChanged();
     }
 
     public static boolean isNetworkAvailable(Activity activity) {

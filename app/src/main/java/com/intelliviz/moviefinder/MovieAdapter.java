@@ -7,7 +7,6 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 
-import com.intelliviz.moviefinder.ui.MainActivity;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
@@ -37,7 +36,7 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
         }
 
         Movie movie = getItem(position);
-        String url = String.format(MainActivity.PosterUrl, movie.getPoster());
+        String url = String.format(ApiKeyMgr.PosterUrl, movie.getPoster());
 
         if (url != null) {
             Picasso

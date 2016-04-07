@@ -19,7 +19,7 @@ import android.text.TextUtils;
 public class MovieProvider extends ContentProvider {
     private SqliteHelper mSqliteHelper;
     private static final String DBASE_NAME = "movies";
-    private static final int DBASE_VERSION = 1;
+    private static final int DBASE_VERSION = 5;
     private static final int MOVIE_LIST = 101;
     private static final int MOVIE_ID = 102;
     private static final int REVIEW_LIST = 201;
@@ -97,6 +97,8 @@ public class MovieProvider extends ContentProvider {
 
         SQLiteDatabase db = mSqliteHelper.getWritableDatabase();
         Cursor cursor = sqLiteQueryBuilder.query(db, projection, selection, selectionArgs, null, null, sortOrder);
+
+        int count = cursor.getCount();
 
         cursor.setNotificationUri(getContext().getContentResolver(), uri);
         return cursor;
@@ -229,12 +231,12 @@ public class MovieProvider extends ContentProvider {
             // create the category table
             String sql = "CREATE TABLE " + MovieContract.MovieEntry.TABLE_NAME +
                     " ( " + MovieContract.MovieEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    MovieContract.MovieEntry.COLUMN_MOVIE_ID + "TEXT NOT NULL, " +
-                    MovieContract.MovieEntry.COLUMN_AVERAGE_VOTE + "TEXT NOT NULL, " +
-                    MovieContract.MovieEntry.COLUMN_POSTER + "TEXT NOT NULL, " +
-                    MovieContract.MovieEntry.COLUMN_RELEASE_DATA + "TEXT NOT NULL, " +
-                    MovieContract.MovieEntry.COLUMN_RUNTIME + "TEXT NOT NULL, " +
-                    MovieContract.MovieEntry.COLUMN_SYNOPSIS + "TEXT NOT NULL, " +
+                    MovieContract.MovieEntry.COLUMN_MOVIE_ID + " TEXT NOT NULL, " +
+                    MovieContract.MovieEntry.COLUMN_AVERAGE_VOTE + " TEXT NOT NULL, " +
+                    MovieContract.MovieEntry.COLUMN_POSTER + " TEXT NOT NULL, " +
+                    MovieContract.MovieEntry.COLUMN_RELEASE_DATA + " TEXT NOT NULL, " +
+                    MovieContract.MovieEntry.COLUMN_RUNTIME + " TEXT NOT NULL, " +
+                    MovieContract.MovieEntry.COLUMN_SYNOPSIS + " TEXT NOT NULL, " +
                     MovieContract.MovieEntry.COLUMN_TITLE + " TEXT NOT NULL);";
 
             db.execSQL(sql);
@@ -242,7 +244,7 @@ public class MovieProvider extends ContentProvider {
             // create the category version table
             sql = "CREATE TABLE " + MovieContract.ReviewEntry.TABLE_NAME +
                     " ( " + MovieContract.ReviewEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    MovieContract.ReviewEntry.COLUMN_CONTENT + "TEXT NOT NULL, " +
+                    MovieContract.ReviewEntry.COLUMN_CONTENT + " TEXT NOT NULL, " +
                     MovieContract.ReviewEntry.COLUMN_AUTHOR + " TEXT NOT NULL);";
 
             db.execSQL(sql);
@@ -252,6 +254,7 @@ public class MovieProvider extends ContentProvider {
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             db.execSQL("DROP TABLE IF EXISTS " + MovieContract.MovieEntry.TABLE_NAME);
             db.execSQL("DROP TABLE IF EXISTS " + MovieContract.ReviewEntry.TABLE_NAME);
+            onCreate(db);
         }
     }
 }
