@@ -57,12 +57,14 @@ public class MovieListFragment extends Fragment implements
     private static final String TAG = MovieListFragment.class.getSimpleName();
     private static final String DEFAULT_SORT_BY_OPTION = "popular";
     public static final int MOVIE_ITEM_LOADER = 0;
+    private static final String COLUMN_SPAN_KEY = "column span key";
     private List<Movie> mMovies = new ArrayList<>();
     private String mMovieUrls;
     private MovieAdapter mPopularAdapter;
     private FavoriteMovieCursorAdapter mFavoriteMovieCursorAdapter;
     private OnSelectMovieListener mListener;
     private String mSortBy;
+    private int mSpanCount;
 
     @Bind(R.id.frameView) FrameLayout mViewSwitcher;
     @Bind(R.id.firstLayoutView) LinearLayout mFavoriteView;
@@ -82,8 +84,13 @@ public class MovieListFragment extends Fragment implements
         // Required empty public constructor
     }
 
-    public static Fragment newInstance() {
+    public static Fragment newInstance(int spanCount) {
+        Bundle args = new Bundle();
+
         Fragment fragment = new MovieListFragment();
+
+        args.putInt(COLUMN_SPAN_KEY, spanCount);
+        fragment.setArguments(args);
         return fragment;
     }
 
@@ -94,7 +101,7 @@ public class MovieListFragment extends Fragment implements
         View view = inflater.inflate(R.layout.fragment_movie_list, container, false);
         ButterKnife.bind(this, view);
 
-        int spanCount = 2;
+        int spanCount = mSpanCount;
 
         mPopularAdapter = new MovieAdapter(getActivity(), mMovies);
         mPopularAdapter.setOnSelectMovieListener(mListener);
@@ -164,6 +171,8 @@ public class MovieListFragment extends Fragment implements
         String sort_key = getResources().getString(R.string.pref_sort_by_key);
         mSortBy = sp.getString(sort_key, DEFAULT_SORT_BY_OPTION);
         mMovieUrls = ApiKeyMgr.getMoviesUrl(mSortBy);
+
+        mSpanCount = getArguments().getInt(COLUMN_SPAN_KEY);
     }
 
     @Override

@@ -4,10 +4,8 @@ import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -15,6 +13,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ArrayAdapter;
 
 import com.intelliviz.moviefinder.ApiKeyMgr;
@@ -37,8 +36,7 @@ public class MainActivity extends AppCompatActivity implements
     private static final String LIST_FRAG_TAG = "list frag tag";
     private static final String API_KEY_NOT_SET = "api key not set";
     private static final String MOVIE_LIST_KEY = "movie_list_key";
-    public String MovieUrl;
-
+    private boolean mIsTablet;
     public static final String MOVIE_EXTRA = "movie_info";
     private ArrayList<Movie> mMovies = new ArrayList<>();
     private String API_KEY = null; // Put api key here;
@@ -53,20 +51,25 @@ public class MainActivity extends AppCompatActivity implements
             fatalError();
         }
 
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-        String sort_key = getResources().getString(R.string.pref_sort_by_key);
-        String sortBy = sp.getString(sort_key, "popular");
-        //sp.registerOnSharedPreferenceChangeListener(this);
-
         FragmentManager fm = getSupportFragmentManager();
-        Fragment fragment = fm.findFragmentById(R.id.fragment_holder);
-
-        if(fragment == null) {
-            fragment = MovieListFragment.newInstance();
+        Fragment fragment;
+        View detailsView = findViewById(R.id.details_fragment);
+        if(detailsView == null){
+            fragment = MovieListFragment.newInstance(2);
             FragmentTransaction ft = fm.beginTransaction();
             ft.add(R.id.fragment_holder, fragment, LIST_FRAG_TAG);
             ft.addToBackStack(null);
             ft.commit();
+            mIsTablet = false;
+        } else {
+            fragment = MovieListFragment.newInstance(4);
+            FragmentTransaction ft = fm.beginTransaction();
+            ft.add(R.id.fragment_holder, fragment, LIST_FRAG_TAG);
+            fragment = MovieDetailsFragment.newInstance(null, false);
+            ft.add(R.id.details_fragment, fragment, DETAIL_FRAG_TAG);
+            ft.addToBackStack(null);
+            ft.commit();
+            mIsTablet = true;
         }
     }
 
@@ -101,12 +104,22 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onSelectMovie(Movie movie) {
-        Fragment fragment = MovieDetailsFragment.newInstance(movie, false);
-        FragmentManager fm = getSupportFragmentManager();
-        FragmentTransaction ft = fm.beginTransaction();
-        ft.replace(R.id.fragment_holder, fragment);
-        ft.addToBackStack(null);
-        ft.commit();
+
+        if(mIsTablet) {
+            MovieDetailsFragment detailsFragment =  ((MovieDetailsFragment)getSupportFragmentManager()
+                    .findFragmentByTag(DETAIL_FRAG_TAG));
+            if(detailsFragment != null) {
+                detailsFragment.updateMovie(movie);
+            }
+        } else {
+            Fragment fragment = MovieDetailsFragment.newInstance(movie, false);
+            FragmentManager fm = getSupportFragmentManager();
+            FragmentTransaction ft = fm.beginTransaction();
+            ft.replace(R.id.fragment_holder, fragment);
+            ft.addToBackStack(null);
+            ft.commit();
+        }
+
     }
 
     @Override

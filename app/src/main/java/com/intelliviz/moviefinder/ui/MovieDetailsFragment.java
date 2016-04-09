@@ -96,58 +96,62 @@ public class MovieDetailsFragment extends Fragment {
         AppCompatActivity activity = (AppCompatActivity)getActivity();
         activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+        if(mMovie != null) {
+            mTitleView.setText(mMovie.getTitle());
+            mSummaryView.setText(mMovie.getSynopsis());
+            mReleaseDateView.setText(mMovie.getReleaseDate());
+
+            if (mIsFavorite) {
+                String unmarkFavorite = getActivity().getResources().getString(R.string.unmark_favorite);
+                mAddToFavoriteButton.setText(unmarkFavorite);
+                mAddToFavoriteButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onDeleteMovieClick(v);
+                    }
+                });
+            } else {
+                String markFavorite = getActivity().getResources().getString(R.string.mark_as_favorite);
+                mAddToFavoriteButton.setText(markFavorite);
+                mAddToFavoriteButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onAddMovieClick(v);
+                    }
+                });
+            }
 
 
-        mTitleView.setText(mMovie.getTitle());
-        mSummaryView.setText(mMovie.getSynopsis());
-        mReleaseDateView.setText(mMovie.getReleaseDate());
 
-        if(mIsFavorite) {
-            String unmarkFavorite = getActivity().getResources().getString(R.string.unmark_favorite);
-            mAddToFavoriteButton.setText(unmarkFavorite);
-            mAddToFavoriteButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    onDeleteMovieClick(v);
-                }
-            });
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-mm-dd");
+            String str = mMovie.getReleaseDate();
+            try {
+                Date date = formatter.parse(mMovie.getReleaseDate());
+
+                formatter = new SimpleDateFormat("yyyy");
+                str = formatter.format(date);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+
+            mReleaseDateView.setText(str);
+            mAverageVoteView.setText(new DecimalFormat("#.#").format(Float.parseFloat(mMovie.getAverageVote())) + "/10");
+
+            if(mMovie.getPoster() != null) {
+                String url = String.format(ApiKeyMgr.PosterUrl, mMovie.getPoster());
+                Picasso
+                        .with(getActivity())
+                        .load(url)
+                        .into(mPosterView);
+
+                getMovie();
+                getReviews();
+                getTrailers();
+            }
         } else {
-            String markFavorite = getActivity().getResources().getString(R.string.mark_as_favorite);
-            mAddToFavoriteButton.setText(markFavorite);
-            mAddToFavoriteButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    onAddMovieClick(v);
-                }
-            });
+            mAddToFavoriteButton.setVisibility(View.GONE);
+            mTitleView.setText("No Movie is Selected");
         }
-
-        String url = String.format(ApiKeyMgr.PosterUrl, mMovie.getPoster());
-
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-mm-dd");
-        String str = mMovie.getReleaseDate();
-        try {
-            Date date = formatter.parse(mMovie.getReleaseDate());
-
-            formatter = new SimpleDateFormat("yyyy");
-            str = formatter.format(date);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-
-        mReleaseDateView.setText(str);
-        mAverageVoteView.setText(new DecimalFormat("#.#").format(Float.parseFloat(mMovie.getAverageVote())) + "/10");
-
-        Picasso
-                .with(getActivity())
-                .load(url)
-                .into(mPosterView);
-
-        getMovie();
-        getReviews();
-        getTrailers();
-
-        //createReviewViews();
 
         return view;
     }
@@ -167,7 +171,9 @@ public class MovieDetailsFragment extends Fragment {
         mMovie = getArguments().getParcelable(MOVIE_KEY);
         mIsFavorite = getArguments().getBoolean(FAVORITE_KEY);
 
-        mMovieUrl = ApiKeyMgr.getMovieUrl(mMovie.getMovieId());
+        if(mMovie != null) {
+            mMovieUrl = ApiKeyMgr.getMovieUrl(mMovie.getMovieId());
+        }
 
     }
 
@@ -196,6 +202,12 @@ public class MovieDetailsFragment extends Fragment {
         return super.onOptionsItemSelected(item);
     }
 
+    public void updateMovie(Movie movie) {
+        mMovie = movie;
+        mMovieUrl = ApiKeyMgr.getMovieUrl(mMovie.getMovieId());
+        updateUI();
+    }
+
     public void onAddMovieClick(View view) {
         if(mListener != null) {
             mListener.onAddMovieToFavorite(mMovie);
@@ -205,6 +217,63 @@ public class MovieDetailsFragment extends Fragment {
     public void onDeleteMovieClick(View view) {
         if(mListener != null) {
             mListener.onDeleteMovieFromFavorite(mMovie);
+        }
+    }
+
+    private void updateUI() {
+        if(mMovie == null) {
+            mAddToFavoriteButton.setVisibility(View.GONE);
+            mTitleView.setText("No Movie is Selected");
+        } else {
+            mTitleView.setText(mMovie.getTitle());
+            mSummaryView.setText(mMovie.getSynopsis());
+            mReleaseDateView.setText(mMovie.getReleaseDate());
+
+            if (mIsFavorite) {
+                String unmarkFavorite = getActivity().getResources().getString(R.string.unmark_favorite);
+                mAddToFavoriteButton.setText(unmarkFavorite);
+                mAddToFavoriteButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onDeleteMovieClick(v);
+                    }
+                });
+            } else {
+                String markFavorite = getActivity().getResources().getString(R.string.mark_as_favorite);
+                mAddToFavoriteButton.setText(markFavorite);
+                mAddToFavoriteButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onAddMovieClick(v);
+                    }
+                });
+            }
+
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-mm-dd");
+            String str = mMovie.getReleaseDate();
+            try {
+                Date date = formatter.parse(mMovie.getReleaseDate());
+
+                formatter = new SimpleDateFormat("yyyy");
+                str = formatter.format(date);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+
+            mReleaseDateView.setText(str);
+            mAverageVoteView.setText(new DecimalFormat("#.#").format(Float.parseFloat(mMovie.getAverageVote())) + "/10");
+
+            if(mMovie.getPoster() != null) {
+                String url = String.format(ApiKeyMgr.PosterUrl, mMovie.getPoster());
+                Picasso
+                        .with(getActivity())
+                        .load(url)
+                        .into(mPosterView);
+
+                getMovie();
+                getReviews();
+                getTrailers();
+            }
         }
     }
 
