@@ -107,39 +107,11 @@ public class MovieListFragment extends Fragment implements
         mPopularAdapter.setOnSelectMovieListener(mListener);
         mPopularRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), spanCount));
         mPopularRecyclerView.setAdapter(mPopularAdapter);
-        /*
-        mPopularRecyclerView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Movie movie = mMovies.get(position);
-                mListener.onSelectMovie(movie);
-            }
-        });
-
-        mPopularRecyclerView.setEmptyView(mPopularEmptyView);
-        */
 
         mFavoriteMovieCursorAdapter = new FavoriteMovieCursorAdapter(getActivity());
         mFavoriteRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), spanCount));
         mFavoriteRecyclerView.setAdapter(mFavoriteMovieCursorAdapter);
         mFavoriteMovieCursorAdapter.setOnSelectMovieListener(mListener);
-        /*
-        mFavoriteRecyclerView.setEmptyView(mFavoriteEmptyView);
-
-        mFavoriteRecyclerView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Cursor cursor = mFavoriteMovieCursorAdapter.getCursor();
-                if (cursor.moveToPosition(position)) {
-                    Movie movie = MovieUtils.extractMovieFromCursor(cursor);
-                    if (movie != null) {
-                        mListener.onSelectFavoriteMovie(movie);
-                    }
-                }
-            }
-        });
-        */
 
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
         sp.registerOnSharedPreferenceChangeListener(this);

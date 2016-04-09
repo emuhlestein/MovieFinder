@@ -58,6 +58,11 @@ public class FavoriteMovieCursorAdapter extends RecyclerView.Adapter<FavoriteMov
         }
     }
 
+    @Override
+    public int getItemViewType(int position) {
+        return super.getItemViewType(position);
+    }
+
     public void setOnSelectMovieListener (MovieListFragment.OnSelectMovieListener listener) {
         mListener = listener;
     }

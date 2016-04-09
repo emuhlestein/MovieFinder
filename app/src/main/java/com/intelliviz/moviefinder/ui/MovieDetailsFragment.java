@@ -96,6 +96,9 @@ public class MovieDetailsFragment extends Fragment {
         AppCompatActivity activity = (AppCompatActivity)getActivity();
         activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+        updateUI();
+
+        /*
         if(mMovie != null) {
             mTitleView.setText(mMovie.getTitle());
             mSummaryView.setText(mMovie.getSynopsis());
@@ -152,6 +155,7 @@ public class MovieDetailsFragment extends Fragment {
             mAddToFavoriteButton.setVisibility(View.GONE);
             mTitleView.setText("No Movie is Selected");
         }
+        */
 
         return view;
     }
@@ -204,7 +208,9 @@ public class MovieDetailsFragment extends Fragment {
 
     public void updateMovie(Movie movie) {
         mMovie = movie;
-        mMovieUrl = ApiKeyMgr.getMovieUrl(mMovie.getMovieId());
+        if(mMovie != null) {
+            mMovieUrl = ApiKeyMgr.getMovieUrl(mMovie.getMovieId());
+        }
         updateUI();
     }
 
@@ -223,7 +229,13 @@ public class MovieDetailsFragment extends Fragment {
     private void updateUI() {
         if(mMovie == null) {
             mAddToFavoriteButton.setVisibility(View.GONE);
-            mTitleView.setText("No Movie is Selected");
+            mTitleView.setText("No Movie Selected");
+            mSummaryView.setText("");
+            mReleaseDateView.setText("");
+            mAverageVoteView.setText("");
+            mPosterView.setImageResource(android.R.color.transparent);
+            mReviewLayout.removeAllViews();
+            mRuntimeView.setText("");
         } else {
             mTitleView.setText(mMovie.getTitle());
             mSummaryView.setText(mMovie.getSynopsis());
@@ -270,6 +282,7 @@ public class MovieDetailsFragment extends Fragment {
                         .load(url)
                         .into(mPosterView);
 
+                mReviewLayout.removeAllViews();
                 getMovie();
                 getReviews();
                 getTrailers();

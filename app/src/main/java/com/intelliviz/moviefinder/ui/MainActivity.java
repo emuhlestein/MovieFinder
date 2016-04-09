@@ -4,8 +4,10 @@ import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -30,7 +32,8 @@ import java.util.ArrayList;
  */
 public class MainActivity extends AppCompatActivity implements
         MovieListFragment.OnSelectMovieListener,
-        MovieDetailsFragment.OnSelectReviewListener {
+        MovieDetailsFragment.OnSelectReviewListener,
+        SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String DETAIL_FRAG_TAG = "detail frag tag";
     private static final String LIST_FRAG_TAG = "list frag tag";
@@ -70,6 +73,9 @@ public class MainActivity extends AppCompatActivity implements
             ft.addToBackStack(null);
             ft.commit();
             mIsTablet = true;
+
+            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+            sp.registerOnSharedPreferenceChangeListener(this);
         }
     }
 
@@ -212,5 +218,16 @@ public class MainActivity extends AppCompatActivity implements
             }
         });
         builder.show();
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if(mIsTablet) {
+            MovieDetailsFragment detailsFragment =  ((MovieDetailsFragment)getSupportFragmentManager()
+                    .findFragmentByTag(DETAIL_FRAG_TAG));
+            if(detailsFragment != null) {
+                detailsFragment.updateMovie(null);
+            }
+        }
     }
 }

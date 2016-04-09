@@ -39,26 +39,20 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Prefer
 
     }
 
-
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
-        String value = newValue.toString();
-        String key = preference.getKey();
-        Preference pref = findPreference(key);
-
-        String v = "";
         if (preference instanceof ListPreference) {
-            ListPreference listPref = (ListPreference) preference;
-            int index = listPref.findIndexOfValue(newValue.toString());
-            CharSequence[] entries = listPref.getEntries();
-            preference.setSummary(entries[index]);
-            //v = s.toString();
+            ListPreference listPreference = (ListPreference)preference;
+            String summary = (String)newValue;
+            CharSequence[] entries = listPreference.getEntries();
+            int index = listPreference.findIndexOfValue(summary);
+
+            if(index != -1) {
+                preference.setSummary(entries[index]);
+                return true;
+            }
         }
 
-        //String val = getResources().getString((String)newValue);
-
-        //preference.get
-        //preference.setSummary((String) newValue);
-        return true;
+        return false;
     }
 }
