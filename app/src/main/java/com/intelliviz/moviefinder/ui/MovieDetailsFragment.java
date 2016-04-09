@@ -50,7 +50,9 @@ import butterknife.ButterKnife;
 public class MovieDetailsFragment extends Fragment {
     private static final String TAG = MovieDetailsFragment.class.getSimpleName();
     private static final String MOVIE_KEY = "movie_key";
+    private static final String FAVORITE_KEY = "favorite_key";
     private Movie mMovie;
+    private boolean mIsFavorite;
     private List<Review> mReviews;
     private List<Trailer> mTrailers;
     private String mMovieUrl;
@@ -71,12 +73,14 @@ public class MovieDetailsFragment extends Fragment {
         void onSelectReview(Review review);
         void onSelectTrailer(Trailer trailer);
         void onAddMovieToFavorite(Movie movie);
+        void onDeleteMovieFromFavorite(Movie movie);
     }
 
-    public static MovieDetailsFragment newInstance(Movie movie) {
+    public static MovieDetailsFragment newInstance(Movie movie, boolean isFavorite) {
         Bundle args = new Bundle();
 
         args.putParcelable(MOVIE_KEY, movie);
+        args.putBoolean(FAVORITE_KEY, isFavorite);
         MovieDetailsFragment fragment = new MovieDetailsFragment();
         fragment.setArguments(args);
         return fragment;
@@ -92,16 +96,31 @@ public class MovieDetailsFragment extends Fragment {
         AppCompatActivity activity = (AppCompatActivity)getActivity();
         activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+
+
         mTitleView.setText(mMovie.getTitle());
         mSummaryView.setText(mMovie.getSynopsis());
         mReleaseDateView.setText(mMovie.getReleaseDate());
 
-        mAddToFavoriteButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onAddMovieClick(v);
-            }
-        });
+        if(mIsFavorite) {
+            String unmarkFavorite = getActivity().getResources().getString(R.string.unmark_favorite);
+            mAddToFavoriteButton.setText(unmarkFavorite);
+            mAddToFavoriteButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onDeleteMovieClick(v);
+                }
+            });
+        } else {
+            String markFavorite = getActivity().getResources().getString(R.string.mark_as_favorite);
+            mAddToFavoriteButton.setText(markFavorite);
+            mAddToFavoriteButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onAddMovieClick(v);
+                }
+            });
+        }
 
         String url = String.format(ApiKeyMgr.PosterUrl, mMovie.getPoster());
 
@@ -146,8 +165,9 @@ public class MovieDetailsFragment extends Fragment {
         setHasOptionsMenu(true);
 
         mMovie = getArguments().getParcelable(MOVIE_KEY);
+        mIsFavorite = getArguments().getBoolean(FAVORITE_KEY);
 
-        mMovieUrl = ApiKeyMgr.getMovieUrl(mMovie.getId());
+        mMovieUrl = ApiKeyMgr.getMovieUrl(mMovie.getMovieId());
 
     }
 
@@ -182,8 +202,14 @@ public class MovieDetailsFragment extends Fragment {
         }
     }
 
+    public void onDeleteMovieClick(View view) {
+        if(mListener != null) {
+            mListener.onDeleteMovieFromFavorite(mMovie);
+        }
+    }
+
     private void getReviews() {
-        String url = ApiKeyMgr.getReviewsUrl(mMovie.getId());
+        String url = ApiKeyMgr.getReviewsUrl(mMovie.getMovieId());
         if(MovieListFragment.isNetworkAvailable(getActivity())) {
             OkHttpClient client = new OkHttpClient();
             Request request = new Request.Builder()
@@ -222,7 +248,7 @@ public class MovieDetailsFragment extends Fragment {
     }
 
     private void getTrailers() {
-        String url = ApiKeyMgr.getTrailersUrl(mMovie.getId());
+        String url = ApiKeyMgr.getTrailersUrl(mMovie.getMovieId());
 
         // TODO put network somewhere else
         if(MovieListFragment.isNetworkAvailable(getActivity())) {

@@ -70,7 +70,7 @@
 
         <Button
             android:id="@+id/addToFavoritesButton"
-            android:text="MARK AS\nFAVORITE"
+            android:text="@string/mark_as_favorite"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/averageVoteView"

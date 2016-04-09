@@ -13,22 +13,29 @@ public class Movie implements Parcelable {
     private String mTitle;
     private String mPoster;
     private String mSynopsis;
-    private String mId;
+    private String mMovieId;
     private String mReleaseDate;
     private String mAverageVote;
     private String mRuntime;
+    private long mId;
 
     public Movie () {
+        this("", "", "", "", "", "", "0", 0);
     }
 
-    public Movie(String title, String poster, String synopsis, String id, String releaseDate, String averageVote) {
+    public Movie(String title, String poster, String synopsis, String movieId, String releaseDate, String averageVote) {
+        this(title, poster, synopsis, movieId, releaseDate, averageVote, "0", 0);
+    }
+
+    public Movie(String title, String poster, String synopsis, String movieId, String releaseDate, String averageVote, String runtime, long id) {
         mTitle = title;
         mPoster = poster;
         mSynopsis = synopsis;
-        mId = id;
+        mMovieId = movieId;
         mReleaseDate = releaseDate;
         mAverageVote = averageVote;
-        mRuntime = "0";
+        mRuntime = runtime;
+        mId = id;
     }
 
     public Movie(String title) {
@@ -47,8 +54,8 @@ public class Movie implements Parcelable {
         return mSynopsis;
     }
 
-    public String getId() {
-        return mId;
+    public String getMovieId() {
+        return mMovieId;
     }
 
     public String getReleaseDate() {
@@ -63,6 +70,10 @@ public class Movie implements Parcelable {
         return mRuntime;
     }
 
+    public long getId() {
+        return mId;
+    }
+
     public void setRuntime(String runtime) {
         mRuntime = runtime;
     }
@@ -71,10 +82,11 @@ public class Movie implements Parcelable {
         mTitle = in.readString();
         mPoster = in.readString();
         mSynopsis = in.readString();
-        mId = in.readString();
+        mMovieId = in.readString();
         mReleaseDate = in.readString();
         mAverageVote = in.readString();
         mRuntime = in.readString();
+        mId = in.readLong();
     }
 
     @Override
@@ -87,10 +99,11 @@ public class Movie implements Parcelable {
         dest.writeString(mTitle);
         dest.writeString(mPoster);
         dest.writeString(mSynopsis);
-        dest.writeString(mId);
+        dest.writeString(mMovieId);
         dest.writeString(mReleaseDate);
         dest.writeString(mAverageVote);
         dest.writeString(mRuntime);
+        dest.writeLong(mId);
     }
 
     public static final Creator<Movie> CREATOR = new Creator<Movie>() {

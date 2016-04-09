@@ -12,6 +12,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
@@ -32,6 +33,8 @@ public class MainActivity extends AppCompatActivity implements
         MovieListFragment.OnSelectMovieListener,
         MovieDetailsFragment.OnSelectReviewListener {
     private static final String TAG = MainActivity.class.getSimpleName();
+    private static final String DETAIL_FRAG_TAG = "detail frag tag";
+    private static final String LIST_FRAG_TAG = "list frag tag";
     private static final String API_KEY_NOT_SET = "api key not set";
     private static final String MOVIE_LIST_KEY = "movie_list_key";
     public String MovieUrl;
@@ -61,7 +64,7 @@ public class MainActivity extends AppCompatActivity implements
         if(fragment == null) {
             fragment = MovieListFragment.newInstance();
             FragmentTransaction ft = fm.beginTransaction();
-            ft.add(R.id.fragment_holder, fragment);
+            ft.add(R.id.fragment_holder, fragment, LIST_FRAG_TAG);
             ft.addToBackStack(null);
             ft.commit();
         }
@@ -95,27 +98,10 @@ public class MainActivity extends AppCompatActivity implements
         outState.putParcelableArrayList(MOVIE_LIST_KEY, mMovies);
         super.onSaveInstanceState(outState);
     }
-/*
-    @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        String sortBy = sharedPreferences.getString(key, "popular");
-        FragmentManager fm = getSupportFragmentManager();
-        Fragment fragment;
 
-        if (sortBy.equals("favorite")) {
-            fragment = FavoriteMovieFragment.newInstance();
-        } else {
-            fragment = MovieListFragment.newInstance();
-        }
-        FragmentTransaction ft = fm.beginTransaction();
-        ft.replace(R.id.fragment_holder, fragment);
-        ft.addToBackStack(null);
-        ft.commit();
-    }
-*/
     @Override
     public void onSelectMovie(Movie movie) {
-        Fragment fragment = MovieDetailsFragment.newInstance(movie);
+        Fragment fragment = MovieDetailsFragment.newInstance(movie, false);
         FragmentManager fm = getSupportFragmentManager();
         FragmentTransaction ft = fm.beginTransaction();
         ft.replace(R.id.fragment_holder, fragment);
@@ -124,8 +110,8 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onSortOnFavorite() {
-        Fragment fragment = FavoriteMovieFragment.newInstance();
+    public void onSelectFavoriteMovie(Movie movie) {
+        Fragment fragment = MovieDetailsFragment.newInstance(movie, true);
         FragmentManager fm = getSupportFragmentManager();
         FragmentTransaction ft = fm.beginTransaction();
         ft.replace(R.id.fragment_holder, fragment);
@@ -153,7 +139,7 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onAddMovieToFavorite(Movie movie) {
         ContentValues values = new ContentValues();
-        values.put(MovieContract.MovieEntry.COLUMN_MOVIE_ID, movie.getId());
+        values.put(MovieContract.MovieEntry.COLUMN_MOVIE_ID, movie.getMovieId());
         values.put(MovieContract.MovieEntry.COLUMN_POSTER, movie.getPoster());
         values.put(MovieContract.MovieEntry.COLUMN_AVERAGE_VOTE, movie.getAverageVote());
         values.put(MovieContract.MovieEntry.COLUMN_RELEASE_DATA, movie.getReleaseDate());
@@ -161,6 +147,21 @@ public class MainActivity extends AppCompatActivity implements
         values.put(MovieContract.MovieEntry.COLUMN_SYNOPSIS, movie.getSynopsis());
         values.put(MovieContract.MovieEntry.COLUMN_TITLE, movie.getTitle());
         Uri uri = getContentResolver().insert(MovieContract.MovieEntry.CONTENT_URI, values);
+    }
+
+    @Override
+    public void onDeleteMovieFromFavorite(Movie movie) {
+        Uri uri = MovieContract.MovieEntry.CONTENT_URI;
+        uri = Uri.withAppendedPath(uri, "" + movie.getId());
+        int numRows = getContentResolver().delete(uri, null, null);
+        Log.d(TAG, "num rows: " + numRows);
+        MovieListFragment movieListFragment =  ((MovieListFragment)getSupportFragmentManager()
+                .findFragmentByTag(LIST_FRAG_TAG));
+        if(movieListFragment != null) {
+            movieListFragment.refreshList();
+            Log.d(TAG, "YEAH!!! Movie list fragment is not DEAD!!!");
+        }
+        //getLoaderManager().restartLoader(MovieListFragment.MOVIE_ITEM_LOADER, null, this);
     }
 
     /**
@@ -199,6 +200,4 @@ public class MainActivity extends AppCompatActivity implements
         });
         builder.show();
     }
-
-
 }

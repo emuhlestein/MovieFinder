@@ -14,14 +14,13 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
-import android.widget.GridView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -57,26 +56,26 @@ public class MovieListFragment extends Fragment implements
         LoaderManager.LoaderCallbacks<Cursor> {
     private static final String TAG = MovieListFragment.class.getSimpleName();
     private static final String DEFAULT_SORT_BY_OPTION = "popular";
-    private static final int MOVIE_ITEM_LOADER = 0;
-    List<Movie> mMovies = new ArrayList<>();
+    public static final int MOVIE_ITEM_LOADER = 0;
+    private List<Movie> mMovies = new ArrayList<>();
     private String mMovieUrls;
-    private ArrayAdapter<Movie> mPopularAdapter;
-    FavoriteMovieCursorAdapter mFavoriteMovieCursorAdapter;
+    private MovieAdapter mPopularAdapter;
+    private FavoriteMovieCursorAdapter mFavoriteMovieCursorAdapter;
     private OnSelectMovieListener mListener;
     private String mSortBy;
 
     @Bind(R.id.frameView) FrameLayout mViewSwitcher;
     @Bind(R.id.firstLayoutView) LinearLayout mFavoriteView;
-    @Bind(R.id.firstGridView) GridView mFavoriteGridView;
+    @Bind(R.id.firstGridView) RecyclerView mFavoriteRecyclerView;
     @Bind(R.id.firstEmptyView) TextView mFavoriteEmptyView;
     @Bind(R.id.secondLayoutView) LinearLayout mPopularView;
-    @Bind(R.id.secondGridView) GridView mPopularGridView;
+    @Bind(R.id.secondGridView) RecyclerView mPopularRecyclerView;
     @Bind(R.id.secondEmptyView) TextView mPopularEmptyView;
 
 
     public interface OnSelectMovieListener {
         void onSelectMovie(Movie movie);
-        void onSortOnFavorite();
+        void onSelectFavoriteMovie(Movie movie);
     }
 
     public MovieListFragment() {
@@ -95,25 +94,45 @@ public class MovieListFragment extends Fragment implements
         View view = inflater.inflate(R.layout.fragment_movie_list, container, false);
         ButterKnife.bind(this, view);
 
+        int spanCount = 2;
+
         mPopularAdapter = new MovieAdapter(getActivity(), mMovies);
-        mPopularGridView.setAdapter(mPopularAdapter);
-        mPopularGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        mPopularAdapter.setOnSelectMovieListener(mListener);
+        mPopularRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), spanCount));
+        mPopularRecyclerView.setAdapter(mPopularAdapter);
+        /*
+        mPopularRecyclerView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Movie movie = mMovies.get(position);
-                String rd = movie.getReleaseDate();
-                Log.d(TAG, movie.getTitle());
                 mListener.onSelectMovie(movie);
             }
         });
 
-        mPopularGridView.setEmptyView(mPopularEmptyView);
+        mPopularRecyclerView.setEmptyView(mPopularEmptyView);
+        */
 
-        mFavoriteMovieCursorAdapter = new FavoriteMovieCursorAdapter(getActivity(), null);
-        mFavoriteGridView.setAdapter(mFavoriteMovieCursorAdapter);
-        mFavoriteGridView.setEmptyView(mFavoriteEmptyView);
+        mFavoriteMovieCursorAdapter = new FavoriteMovieCursorAdapter(getActivity());
+        mFavoriteRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), spanCount));
+        mFavoriteRecyclerView.setAdapter(mFavoriteMovieCursorAdapter);
+        mFavoriteMovieCursorAdapter.setOnSelectMovieListener(mListener);
+        /*
+        mFavoriteRecyclerView.setEmptyView(mFavoriteEmptyView);
 
-        Log.d(TAG, "Count: " + mViewSwitcher.getChildCount());
+        mFavoriteRecyclerView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Cursor cursor = mFavoriteMovieCursorAdapter.getCursor();
+                if (cursor.moveToPosition(position)) {
+                    Movie movie = MovieUtils.extractMovieFromCursor(cursor);
+                    if (movie != null) {
+                        mListener.onSelectFavoriteMovie(movie);
+                    }
+                }
+            }
+        });
+        */
 
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
         sp.registerOnSharedPreferenceChangeListener(this);
@@ -128,9 +147,8 @@ public class MovieListFragment extends Fragment implements
             mPopularView.setVisibility(View.VISIBLE);
         }
 
-        getLoaderManager().initLoader(MOVIE_ITEM_LOADER, null, this);
-        getMovies();
 
+        getMovies();
 
         return view;
     }
@@ -151,6 +169,7 @@ public class MovieListFragment extends Fragment implements
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+        getLoaderManager().initLoader(MOVIE_ITEM_LOADER, null, this);
         if(context instanceof OnSelectMovieListener) {
             mListener = (OnSelectMovieListener)context;
         }
@@ -199,6 +218,7 @@ public class MovieListFragment extends Fragment implements
                                         MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry.COLUMN_POSTER,
                                         MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry.COLUMN_AVERAGE_VOTE,
                                         MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry.COLUMN_MOVIE_ID,
+                                        MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry.COLUMN_RUNTIME,
                                 },
                         null,
                         null,
@@ -214,11 +234,23 @@ public class MovieListFragment extends Fragment implements
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         mFavoriteMovieCursorAdapter.swapCursor(cursor);
+        if(mFavoriteMovieCursorAdapter.getItemCount() == 0) {
+            mFavoriteEmptyView.setText("LIST IS EMPTY");
+            mFavoriteEmptyView.setVisibility(View.VISIBLE);
+            mFavoriteRecyclerView.setVisibility(View.GONE);
+        } else {
+            mFavoriteEmptyView.setVisibility(View.GONE);
+            mFavoriteRecyclerView.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         mFavoriteMovieCursorAdapter.swapCursor(null);
+    }
+
+    public void refreshList() {
+        getLoaderManager().restartLoader(MOVIE_ITEM_LOADER, null, this);
     }
 
 
