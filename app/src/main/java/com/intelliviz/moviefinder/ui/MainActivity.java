@@ -118,24 +118,29 @@ public class MainActivity extends AppCompatActivity implements
                 detailsFragment.updateMovie(movie);
             }
         } else {
-            Fragment fragment = MovieDetailsFragment.newInstance(movie, false);
-            FragmentManager fm = getSupportFragmentManager();
-            FragmentTransaction ft = fm.beginTransaction();
-            ft.replace(R.id.fragment_holder, fragment);
-            ft.addToBackStack(null);
-            ft.commit();
+            Intent intent = new Intent(this, MovieDetailsActivity.class);
+            intent.putExtra(MovieDetailsActivity.MOVIE_EXTRA, movie);
+            intent.putExtra(MovieDetailsActivity.FAVORITE_EXTRA, false);
+            startActivity(intent);
         }
 
     }
 
     @Override
     public void onSelectFavoriteMovie(Movie movie) {
-        Fragment fragment = MovieDetailsFragment.newInstance(movie, true);
-        FragmentManager fm = getSupportFragmentManager();
-        FragmentTransaction ft = fm.beginTransaction();
-        ft.replace(R.id.fragment_holder, fragment);
-        ft.addToBackStack(null);
-        ft.commit();
+        if(mIsTablet) {
+            Fragment fragment = MovieDetailsFragment.newInstance(movie, true);
+            FragmentManager fm = getSupportFragmentManager();
+            FragmentTransaction ft = fm.beginTransaction();
+            ft.replace(R.id.fragment_holder, fragment);
+            ft.addToBackStack(null);
+            ft.commit();
+        } else {
+            Intent intent = new Intent(this, MovieDetailsActivity.class);
+            intent.putExtra(MovieDetailsActivity.MOVIE_EXTRA, movie);
+            intent.putExtra(MovieDetailsActivity.FAVORITE_EXTRA, false);
+            startActivity(intent);
+        }
     }
 
     @Override
