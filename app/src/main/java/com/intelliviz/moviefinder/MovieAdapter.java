@@ -58,6 +58,10 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieHolder>
         return mMovies.size();
     }
 
+    public void clear() {
+        mMovies.clear();
+    }
+
     public void setOnSelectMovieListener (MovieListFragment.OnSelectMovieListener listener) {
         mListener = listener;
     }

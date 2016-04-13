@@ -26,6 +26,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.intelliviz.moviefinder.ApiKeyMgr;
+import com.intelliviz.moviefinder.EndlessOnScrollListener;
 import com.intelliviz.moviefinder.FavoriteMovieCursorAdapter;
 import com.intelliviz.moviefinder.Movie;
 import com.intelliviz.moviefinder.MovieAdapter;
@@ -102,11 +103,22 @@ public class MovieListFragment extends Fragment implements
         ButterKnife.bind(this, view);
 
         int spanCount = mSpanCount;
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(getActivity(), spanCount);
 
         mPopularAdapter = new MovieAdapter(getActivity(), mMovies);
         mPopularAdapter.setOnSelectMovieListener(mListener);
-        mPopularRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), spanCount));
+        mPopularRecyclerView.setLayoutManager(gridLayoutManager);
         mPopularRecyclerView.setAdapter(mPopularAdapter);
+        mPopularRecyclerView.addOnScrollListener(new EndlessOnScrollListener(gridLayoutManager) {
+            @Override
+            public void onLoadMore(int currentPage) {
+                Log.d(TAG, "Loading more...");
+                mPopularAdapter.clear();
+                mPopularAdapter.notifyDataSetChanged();
+                mMovieUrls = ApiKeyMgr.getMoviesUrl(mSortBy, currentPage);
+                getMovies();
+            }
+        });
 
         mFavoriteMovieCursorAdapter = new FavoriteMovieCursorAdapter(getActivity());
         mFavoriteRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), spanCount));

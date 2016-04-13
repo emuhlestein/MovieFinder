@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity implements
             fragment = MovieListFragment.newInstance(2);
             FragmentTransaction ft = fm.beginTransaction();
             ft.add(R.id.fragment_holder, fragment, LIST_FRAG_TAG);
-            ft.addToBackStack(null);
+            //ft.addToBackStack(null);
             ft.commit();
             mIsTablet = false;
         } else {
@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements
             ft.add(R.id.fragment_holder, fragment, LIST_FRAG_TAG);
             fragment = MovieDetailsFragment.newInstance(null, false);
             ft.add(R.id.details_fragment, fragment, DETAIL_FRAG_TAG);
-            ft.addToBackStack(null);
+            //ft.addToBackStack(null);
             ft.commit();
             mIsTablet = true;
 
@@ -202,10 +202,10 @@ public class MainActivity extends AppCompatActivity implements
             // not be performed until the application returns to its event loop. -Android Docs.
             fm.popBackStack();
             if(count == 1) {
-                super.onBackPressed();
+                //super.onBackPressed();
             }
         } else {
-            super.onBackPressed();
+            //super.onBackPressed();
         }
     }
 

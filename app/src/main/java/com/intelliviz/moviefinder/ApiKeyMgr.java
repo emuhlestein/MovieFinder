@@ -55,6 +55,14 @@ public class ApiKeyMgr {
         return url;
     }
 
+    public static String getMoviesUrl(String sortBy, int page) {
+        String url = MOVIEDB_END_POINT
+                + sortBy
+                + "?page="+ page
+                + "&api_key=" + mApiKey;
+        return url;
+    }
+
     public static String getReviewsUrl(String id) {
         String url = MOVIEDB_END_POINT
                 + id
