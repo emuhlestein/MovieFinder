@@ -3,7 +3,7 @@ package com.intelliviz.moviefinder.ui;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
+import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -72,7 +72,7 @@ public class MovieDetailsFragment extends Fragment {
     public interface OnSelectReviewListener {
         void onSelectReview(Review review);
         void onSelectTrailer(Trailer trailer);
-        void onAddMovieToFavorite(Movie movie);
+        void onAddMovieToFavorite(Movie movie, List<Review> mReviews);
         void onDeleteMovieFromFavorite(Movie movie);
     }
 
@@ -98,65 +98,6 @@ public class MovieDetailsFragment extends Fragment {
 
         updateUI();
 
-        /*
-        if(mMovie != null) {
-            mTitleView.setText(mMovie.getTitle());
-            mSummaryView.setText(mMovie.getSynopsis());
-            mReleaseDateView.setText(mMovie.getReleaseDate());
-
-            if (mIsFavorite) {
-                String unmarkFavorite = getActivity().getResources().getString(R.string.unmark_favorite);
-                mAddToFavoriteButton.setText(unmarkFavorite);
-                mAddToFavoriteButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        onDeleteMovieClick(v);
-                    }
-                });
-            } else {
-                String markFavorite = getActivity().getResources().getString(R.string.mark_as_favorite);
-                mAddToFavoriteButton.setText(markFavorite);
-                mAddToFavoriteButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        onAddMovieClick(v);
-                    }
-                });
-            }
-
-
-
-            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-mm-dd");
-            String str = mMovie.getReleaseDate();
-            try {
-                Date date = formatter.parse(mMovie.getReleaseDate());
-
-                formatter = new SimpleDateFormat("yyyy");
-                str = formatter.format(date);
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-
-            mReleaseDateView.setText(str);
-            mAverageVoteView.setText(new DecimalFormat("#.#").format(Float.parseFloat(mMovie.getAverageVote())) + "/10");
-
-            if(mMovie.getPoster() != null) {
-                String url = String.format(ApiKeyMgr.PosterUrl, mMovie.getPoster());
-                Picasso
-                        .with(getActivity())
-                        .load(url)
-                        .into(mPosterView);
-
-                getMovie();
-                getReviews();
-                getTrailers();
-            }
-        } else {
-            mAddToFavoriteButton.setVisibility(View.GONE);
-            mTitleView.setText("No Movie is Selected");
-        }
-        */
-
         return view;
     }
 
@@ -178,7 +119,6 @@ public class MovieDetailsFragment extends Fragment {
         if(mMovie != null) {
             mMovieUrl = ApiKeyMgr.getMovieUrl(mMovie.getMovieId());
         }
-
     }
 
     @Override
@@ -199,8 +139,9 @@ public class MovieDetailsFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                FragmentManager fm = getFragmentManager();
-                fm.popBackStack();
+                if(NavUtils.getParentActivityName(getActivity()) != null) {
+                    NavUtils.navigateUpFromSameTask(getActivity());
+                }
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -216,7 +157,7 @@ public class MovieDetailsFragment extends Fragment {
 
     public void onAddMovieClick(View view) {
         if(mListener != null) {
-            mListener.onAddMovieToFavorite(mMovie);
+            mListener.onAddMovieToFavorite(mMovie, mReviews);
         }
     }
 
@@ -283,16 +224,16 @@ public class MovieDetailsFragment extends Fragment {
                         .into(mPosterView);
 
                 mReviewLayout.removeAllViews();
-                getMovie();
-                getReviews();
-                getTrailers();
+                loadMovie();
+                loadReviews();
+                loadTrailers();
             }
         }
     }
 
-    private void getReviews() {
+    private void loadReviews() {
         String url = ApiKeyMgr.getReviewsUrl(mMovie.getMovieId());
-        if(MovieListFragment.isNetworkAvailable(getActivity())) {
+        if(MovieListFragment.isNetworkAvailable((AppCompatActivity) getActivity())) {
             OkHttpClient client = new OkHttpClient();
             Request request = new Request.Builder()
                     .url(url)
@@ -313,7 +254,6 @@ public class MovieDetailsFragment extends Fragment {
                     extractReviewsFromJson(jsonData);
 
                     if (response.isSuccessful()) {
-
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -329,11 +269,11 @@ public class MovieDetailsFragment extends Fragment {
         }
     }
 
-    private void getTrailers() {
+    private void loadTrailers() {
         String url = ApiKeyMgr.getTrailersUrl(mMovie.getMovieId());
 
         // TODO put network somewhere else
-        if(MovieListFragment.isNetworkAvailable(getActivity())) {
+        if(MovieListFragment.isNetworkAvailable((AppCompatActivity) getActivity())) {
             OkHttpClient client = new OkHttpClient();
             Request request = new Request.Builder()
                     .url(url)
@@ -370,9 +310,9 @@ public class MovieDetailsFragment extends Fragment {
         }
     }
 
-    private void getMovie() {
+    private void loadMovie() {
 
-        if(MovieListFragment.isNetworkAvailable(getActivity())) {
+        if(MovieListFragment.isNetworkAvailable((AppCompatActivity) getActivity())) {
             OkHttpClient client = new OkHttpClient();
             Request request = new Request.Builder()
                     .url(mMovieUrl)

@@ -80,7 +80,7 @@ public class MovieProvider extends ContentProvider {
             case MOVIE_ID:
                 // get a particular movie: "movie/#"
                 sqLiteQueryBuilder.setTables(MovieContract.MovieEntry.TABLE_NAME);
-                sqLiteQueryBuilder.appendWhere(MovieContract.MovieEntry._ID +
+                sqLiteQueryBuilder.appendWhere(MovieContract.MovieEntry.COLUMN_MOVIE_ID +
                         "=" + uri.getLastPathSegment());
                 break;
             case REVIEW_LIST:
@@ -90,7 +90,7 @@ public class MovieProvider extends ContentProvider {
             case REVIEW_ID:
                 // get a particular review: "review/#"
                 sqLiteQueryBuilder.setTables(MovieContract.ReviewEntry.TABLE_NAME);
-                sqLiteQueryBuilder.appendWhere(MovieContract.ReviewEntry._ID +
+                sqLiteQueryBuilder.appendWhere(MovieContract.MovieEntry.COLUMN_MOVIE_ID +
                         "=" + uri.getLastPathSegment());
                 break;
         }

@@ -30,7 +30,9 @@
             android:authorities="com.intelliviz.moviefinder.db.MovieProvider"
             android:exported="true" />
 
-        <activity android:name=".ui.MovieDetailsActivity"></activity>
+        <activity android:name=".ui.MovieDetailsActivity"
+            android:parentActivityName=".ui.MainActivity">
+        </activity>
     </application>
 
 </manifest>

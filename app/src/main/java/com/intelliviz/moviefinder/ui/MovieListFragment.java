@@ -1,7 +1,5 @@
 package com.intelliviz.moviefinder.ui;
 
-
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -14,6 +12,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -26,7 +25,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.intelliviz.moviefinder.ApiKeyMgr;
-import com.intelliviz.moviefinder.EndlessOnScrollListener;
 import com.intelliviz.moviefinder.FavoriteMovieCursorAdapter;
 import com.intelliviz.moviefinder.Movie;
 import com.intelliviz.moviefinder.MovieAdapter;
@@ -109,6 +107,7 @@ public class MovieListFragment extends Fragment implements
         mPopularAdapter.setOnSelectMovieListener(mListener);
         mPopularRecyclerView.setLayoutManager(gridLayoutManager);
         mPopularRecyclerView.setAdapter(mPopularAdapter);
+        /*
         mPopularRecyclerView.addOnScrollListener(new EndlessOnScrollListener(gridLayoutManager) {
             @Override
             public void onLoadMore(int currentPage) {
@@ -119,6 +118,7 @@ public class MovieListFragment extends Fragment implements
                 getMovies();
             }
         });
+        */
 
         mFavoriteMovieCursorAdapter = new FavoriteMovieCursorAdapter(getActivity());
         mFavoriteRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), spanCount));
@@ -130,6 +130,8 @@ public class MovieListFragment extends Fragment implements
 
         String sort_key = getResources().getString(R.string.pref_sort_by_key);
         mSortBy = sp.getString(sort_key, DEFAULT_SORT_BY_OPTION);
+
+
         if(mSortBy.equals("favorite")) {
             mFavoriteView.setVisibility(View.VISIBLE);
             mPopularView.setVisibility(View.GONE);
@@ -137,6 +139,8 @@ public class MovieListFragment extends Fragment implements
             mFavoriteView.setVisibility(View.GONE);
             mPopularView.setVisibility(View.VISIBLE);
         }
+
+        ((AppCompatActivity)getActivity()).getSupportActionBar().setSubtitle(getSortedBy(mSortBy));
 
 
         getMovies();
@@ -192,6 +196,8 @@ public class MovieListFragment extends Fragment implements
             mMovieUrls = ApiKeyMgr.getMoviesUrl(mSortBy);
             getMovies();
         }
+
+        //((AppCompatActivity)getActivity()).getSupportActionBar().setSubtitle(mSortBy);
     }
 
     @Override
@@ -252,7 +258,7 @@ public class MovieListFragment extends Fragment implements
         if(mSortBy.equals("favorite")) {
 
         } else {
-            if(isNetworkAvailable(getActivity())) {
+            if(isNetworkAvailable((AppCompatActivity)getActivity())) {
                 OkHttpClient client = new OkHttpClient();
                 Request request = new Request.Builder()
                         .url(mMovieUrls)
@@ -270,12 +276,13 @@ public class MovieListFragment extends Fragment implements
                         String jsonData = response.body().string();
                         if (response.isSuccessful()) {
                             mMovies = extractMoviesFromJson(jsonData);
+                            //MovieListFragment.this.geta
                             if(getActivity() == null) {
                                 Toast.makeText(getActivity(), "Activity is null", Toast.LENGTH_SHORT).show();
                             }
                             getActivity().runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
+                               @Override
+                               public void run() {
                                     updateDisplay();
                                 }
                             });
@@ -293,7 +300,7 @@ public class MovieListFragment extends Fragment implements
         mPopularAdapter.notifyDataSetChanged();
     }
 
-    public static boolean isNetworkAvailable(Activity activity) {
+    public static boolean isNetworkAvailable(AppCompatActivity activity) {
         boolean isAvailable = false;
         if(activity != null) {
             ConnectivityManager manager =
@@ -348,5 +355,16 @@ public class MovieListFragment extends Fragment implements
         }
 
         return null;
+    }
+
+    private String getSortedBy(String value) {
+        String[] sortByOptions = getActivity().getResources().getStringArray(R.array.sort_by_options);
+        String[] sortByValues = getActivity().getResources().getStringArray(R.array.sort_by_values);
+        for(int i = 0; i < sortByValues.length; i++) {
+            if(sortByValues[i].equals(value)) {
+                return sortByOptions[i];
+            }
+        }
+        return value;
     }
 }
