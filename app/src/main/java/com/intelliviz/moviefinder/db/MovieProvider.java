@@ -19,7 +19,7 @@ import android.text.TextUtils;
 public class MovieProvider extends ContentProvider {
     private SqliteHelper mSqliteHelper;
     private static final String DBASE_NAME = "movies";
-    private static final int DBASE_VERSION = 5;
+    private static final int DBASE_VERSION = 7;
     private static final int MOVIE_LIST = 101;
     private static final int MOVIE_ID = 102;
     private static final int REVIEW_LIST = 201;
@@ -80,7 +80,7 @@ public class MovieProvider extends ContentProvider {
             case MOVIE_ID:
                 // get a particular movie: "movie/#"
                 sqLiteQueryBuilder.setTables(MovieContract.MovieEntry.TABLE_NAME);
-                sqLiteQueryBuilder.appendWhere(MovieContract.MovieEntry.COLUMN_MOVIE_ID +
+                sqLiteQueryBuilder.appendWhere(MovieContract.MovieEntry._ID +
                         "=" + uri.getLastPathSegment());
                 break;
             case REVIEW_LIST:
@@ -90,7 +90,7 @@ public class MovieProvider extends ContentProvider {
             case REVIEW_ID:
                 // get a particular review: "review/#"
                 sqLiteQueryBuilder.setTables(MovieContract.ReviewEntry.TABLE_NAME);
-                sqLiteQueryBuilder.appendWhere(MovieContract.MovieEntry.COLUMN_MOVIE_ID +
+                sqLiteQueryBuilder.appendWhere(MovieContract.ReviewEntry._ID +
                         "=" + uri.getLastPathSegment());
                 break;
         }
@@ -115,6 +115,16 @@ public class MovieProvider extends ContentProvider {
 
         switch(sUriMatcher.match(uri)) {
             case MOVIE_LIST:
+                // The second parameter will allow an empty row to be inserted. If it was null, then no row
+                // can be inserted if values is empty.
+                rowId = db.insert(MovieContract.MovieEntry.TABLE_NAME, null, values);
+                if (rowId > -1) {
+                    returnUri = ContentUris.withAppendedId(uri, rowId);
+                } else {
+                    throw new android.database.SQLException("Failed to insert row into " + uri);
+                }
+                break;
+            case REVIEW_ID:
                 // The second parameter will allow an empty row to be inserted. If it was null, then no row
                 // can be inserted if values is empty.
                 rowId = db.insert(MovieContract.MovieEntry.TABLE_NAME, null, values);
@@ -244,6 +254,7 @@ public class MovieProvider extends ContentProvider {
             // create the category version table
             sql = "CREATE TABLE " + MovieContract.ReviewEntry.TABLE_NAME +
                     " ( " + MovieContract.ReviewEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    MovieContract.ReviewEntry.COLUMN_MOVIE_ID + " INTEGER NOT NULL," +
                     MovieContract.ReviewEntry.COLUMN_CONTENT + " TEXT NOT NULL, " +
                     MovieContract.ReviewEntry.COLUMN_AUTHOR + " TEXT NOT NULL);";
 

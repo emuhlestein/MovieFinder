@@ -75,7 +75,17 @@ public class MovieListFragment extends Fragment implements
 
 
     public interface OnSelectMovieListener {
+
+        /**
+         * Callback for when a movie is selected from the general list.
+         * @param movie The selected movie.
+         */
         void onSelectMovie(Movie movie);
+
+        /**
+         * Callback for when a movie is selected from the favorite list.
+         * @param movie The selected movie.
+         */
         void onSelectFavoriteMovie(Movie movie);
     }
 

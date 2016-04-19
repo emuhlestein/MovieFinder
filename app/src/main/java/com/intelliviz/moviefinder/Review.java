@@ -9,11 +9,13 @@ import android.os.Parcelable;
 public class Review implements Parcelable {
     private String mAuthor;
     private String mContent;
+    private String mMovieId;
 
     public Review() {
     }
 
-    public Review(String author, String content) {
+    public Review(String movieId, String author, String content) {
+        mMovieId = movieId;
         mAuthor = author;
         mContent = content;
     }
@@ -27,6 +29,7 @@ public class Review implements Parcelable {
     }
 
     public Review(Parcel in) {
+        mMovieId = in.readString();
         mAuthor = in.readString();
         mContent = in.readString();
     }
@@ -38,6 +41,7 @@ public class Review implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(mMovieId);
         dest.writeString(mAuthor);
         dest.writeString(mContent);
     }

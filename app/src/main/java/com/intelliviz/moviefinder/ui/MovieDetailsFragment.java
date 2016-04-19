@@ -51,6 +51,7 @@ public class MovieDetailsFragment extends Fragment {
     private static final String TAG = MovieDetailsFragment.class.getSimpleName();
     private static final String MOVIE_KEY = "movie_key";
     private static final String FAVORITE_KEY = "favorite_key";
+    private static final String REVIEWS_KEY = "reviews_key";
     private Movie mMovie;
     private boolean mIsFavorite;
     private List<Review> mReviews;
@@ -58,6 +59,8 @@ public class MovieDetailsFragment extends Fragment {
     private String mMovieUrl;
     private TextView[] mReviewViews;
     private OnSelectReviewListener mListener;
+    private boolean mLoadFromDatabase = false;
+    private boolean mIsNetworkAvailable = false;
 
 
     @Bind(R.id.posterView) ImageView mPosterView;
@@ -76,11 +79,12 @@ public class MovieDetailsFragment extends Fragment {
         void onDeleteMovieFromFavorite(Movie movie);
     }
 
-    public static MovieDetailsFragment newInstance(Movie movie, boolean isFavorite) {
+    public static MovieDetailsFragment newInstance(Movie movie, ArrayList<Review> reviews, boolean isFavorite) {
         Bundle args = new Bundle();
 
         args.putParcelable(MOVIE_KEY, movie);
         args.putBoolean(FAVORITE_KEY, isFavorite);
+        args.putParcelableArrayList(REVIEWS_KEY, reviews);
         MovieDetailsFragment fragment = new MovieDetailsFragment();
         fragment.setArguments(args);
         return fragment;
@@ -115,6 +119,12 @@ public class MovieDetailsFragment extends Fragment {
 
         mMovie = getArguments().getParcelable(MOVIE_KEY);
         mIsFavorite = getArguments().getBoolean(FAVORITE_KEY);
+        mReviews = getArguments().getParcelableArrayList(REVIEWS_KEY);
+        mIsNetworkAvailable = MovieListFragment.isNetworkAvailable((AppCompatActivity) getActivity());
+
+        if(mIsFavorite || !mIsNetworkAvailable) {
+            mLoadFromDatabase = true;
+        }
 
         if(mMovie != null) {
             mMovieUrl = ApiKeyMgr.getMovieUrl(mMovie.getMovieId());
@@ -216,24 +226,28 @@ public class MovieDetailsFragment extends Fragment {
             mReleaseDateView.setText(str);
             mAverageVoteView.setText(new DecimalFormat("#.#").format(Float.parseFloat(mMovie.getAverageVote())) + "/10");
 
-            if(mMovie.getPoster() != null) {
+            if(mIsNetworkAvailable && mMovie.getPoster() != null) {
                 String url = String.format(ApiKeyMgr.PosterUrl, mMovie.getPoster());
                 Picasso
                         .with(getActivity())
                         .load(url)
                         .into(mPosterView);
 
-                mReviewLayout.removeAllViews();
-                loadMovie();
-                loadReviews();
-                loadTrailers();
             }
+
+            mReviewLayout.removeAllViews();
+            loadMovieRuntime();
+            loadReviews();
+            loadTrailers();
         }
     }
 
     private void loadReviews() {
-        String url = ApiKeyMgr.getReviewsUrl(mMovie.getMovieId());
-        if(MovieListFragment.isNetworkAvailable((AppCompatActivity) getActivity())) {
+        if(mLoadFromDatabase) {
+            createReviewViews();
+        }
+        else if(mIsNetworkAvailable) {
+            String url = ApiKeyMgr.getReviewsUrl(mMovie.getMovieId());
             OkHttpClient client = new OkHttpClient();
             Request request = new Request.Builder()
                     .url(url)
@@ -264,16 +278,14 @@ public class MovieDetailsFragment extends Fragment {
                     }
                 }
             });
-        } else {
-            // network is unavailable
         }
     }
 
     private void loadTrailers() {
-        String url = ApiKeyMgr.getTrailersUrl(mMovie.getMovieId());
 
         // TODO put network somewhere else
-        if(MovieListFragment.isNetworkAvailable((AppCompatActivity) getActivity())) {
+        if(mIsNetworkAvailable) {
+            String url = ApiKeyMgr.getTrailersUrl(mMovie.getMovieId());
             OkHttpClient client = new OkHttpClient();
             Request request = new Request.Builder()
                     .url(url)
@@ -310,9 +322,9 @@ public class MovieDetailsFragment extends Fragment {
         }
     }
 
-    private void loadMovie() {
+    private void loadMovieRuntime() {
 
-        if(MovieListFragment.isNetworkAvailable((AppCompatActivity) getActivity())) {
+        if(mIsNetworkAvailable) {
             OkHttpClient client = new OkHttpClient();
             Request request = new Request.Builder()
                     .url(mMovieUrl)
@@ -346,8 +358,6 @@ public class MovieDetailsFragment extends Fragment {
                     }
                 }
             });
-        } else {
-            // network is unavailable
         }
     }
 
@@ -416,7 +426,7 @@ public class MovieDetailsFragment extends Fragment {
         try {
             String author = object.getString("author");
             String content = object.getString("content");
-            Review review = new Review(author, content);
+            Review review = new Review(mMovie.getMovieId(), author, content);
             return review;
         } catch (JSONException e) {
             Log.e(TAG, "Error reading review");

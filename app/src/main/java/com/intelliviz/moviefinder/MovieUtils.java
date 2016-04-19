@@ -1,8 +1,14 @@
 package com.intelliviz.moviefinder;
 
+import android.app.Activity;
+import android.content.ContentValues;
 import android.database.Cursor;
+import android.net.Uri;
+import android.widget.Toast;
 
 import com.intelliviz.moviefinder.db.MovieContract;
+
+import java.util.List;
 
 /**
  * Created by edm on 4/8/2016.
@@ -33,4 +39,46 @@ public class MovieUtils {
         Movie movie = new Movie(title, poster, synopsis, movieId, releaseDate, aveVote, runtime, id);
         return movie;
     }
+
+    public static void addMovieToFavorite(Activity activity, Movie movie, List<Review> reviews) {
+        if(doesMovieExist(activity, movie)) {
+            Toast.makeText(activity, "Movie already marked as favorite. It will not be added: " + movie.getTitle(), Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        ContentValues values = new ContentValues();
+        values.put(MovieContract.MovieEntry.COLUMN_MOVIE_ID, movie.getMovieId());
+        values.put(MovieContract.MovieEntry.COLUMN_POSTER, movie.getPoster());
+        values.put(MovieContract.MovieEntry.COLUMN_AVERAGE_VOTE, movie.getAverageVote());
+        values.put(MovieContract.MovieEntry.COLUMN_RELEASE_DATA, movie.getReleaseDate());
+        values.put(MovieContract.MovieEntry.COLUMN_RUNTIME, movie.getRuntime());
+        values.put(MovieContract.MovieEntry.COLUMN_SYNOPSIS, movie.getSynopsis());
+        values.put(MovieContract.MovieEntry.COLUMN_TITLE, movie.getTitle());
+        Uri uri = activity.getContentResolver().insert(MovieContract.MovieEntry.CONTENT_URI, values);
+
+        String id = uri.getLastPathSegment();
+        for(Review review : reviews) {
+            values = new ContentValues();
+            values.put(MovieContract.ReviewEntry.COLUMN_MOVIE_ID, movie.getMovieId());
+            values.put(MovieContract.ReviewEntry.COLUMN_AUTHOR, review.getAuthor());
+            values.put(MovieContract.ReviewEntry.COLUMN_CONTENT, review.getContent());
+            uri = activity.getContentResolver().insert(MovieContract.ReviewEntry.CONTENT_URI, values);
+        }
+    }
+
+    private static boolean doesMovieExist(Activity activity, Movie movie) {
+        Uri uri = MovieContract.MovieEntry.CONTENT_URI;
+        //uri = Uri.withAppendedPath(uri, "" + movie.getId());
+
+        String selectionClause = MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?";
+        String[] selectionArgs = {movie.getMovieId()};
+        String[] projection = {MovieContract.MovieEntry._ID, MovieContract.MovieEntry.COLUMN_MOVIE_ID};
+        Cursor cursor = activity.getContentResolver().query(uri, projection, selectionClause, selectionArgs, null);
+        if(cursor.moveToNext()) {
+            return true;
+        }
+
+        return false;
+    }
+
 }

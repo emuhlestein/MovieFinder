@@ -1,7 +1,6 @@
 package com.intelliviz.moviefinder.ui;
 
 import android.app.AlertDialog;
-import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -17,10 +16,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
-import android.widget.Toast;
 
 import com.intelliviz.moviefinder.ApiKeyMgr;
 import com.intelliviz.moviefinder.Movie;
+import com.intelliviz.moviefinder.MovieUtils;
 import com.intelliviz.moviefinder.R;
 import com.intelliviz.moviefinder.Review;
 import com.intelliviz.moviefinder.Trailer;
@@ -70,7 +69,7 @@ public class MainActivity extends AppCompatActivity implements
             fragment = MovieListFragment.newInstance(4);
             FragmentTransaction ft = fm.beginTransaction();
             ft.add(R.id.fragment_holder, fragment, LIST_FRAG_TAG);
-            fragment = MovieDetailsFragment.newInstance(null, false);
+            fragment = MovieDetailsFragment.newInstance(null, null, false);
             ft.add(R.id.details_fragment, fragment, DETAIL_FRAG_TAG);
             ft.commit();
             mIsTablet = true;
@@ -128,8 +127,9 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onSelectFavoriteMovie(Movie movie) {
+        ArrayList<Review> reviews = getReviews(movie);
         if(mIsTablet) {
-            Fragment fragment = MovieDetailsFragment.newInstance(movie, true);
+            Fragment fragment = MovieDetailsFragment.newInstance(movie, reviews, true);
             FragmentManager fm = getSupportFragmentManager();
             FragmentTransaction ft = fm.beginTransaction();
             ft.replace(R.id.fragment_holder, fragment);
@@ -137,7 +137,9 @@ public class MainActivity extends AppCompatActivity implements
             ft.commit();
         } else {
             Intent intent = new Intent(this, MovieDetailsActivity.class);
+
             intent.putExtra(MovieDetailsActivity.MOVIE_EXTRA, movie);
+            intent.putParcelableArrayListExtra(MovieDetailsActivity.REVIEWS_EXTRA, reviews);
             intent.putExtra(MovieDetailsActivity.FAVORITE_EXTRA, true);
             startActivityForResult(intent, DETAILS_ACTIVITY);
         }
@@ -162,19 +164,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onAddMovieToFavorite(Movie movie, List<Review> reviews) {
-        if(doesMovieExist(movie)) {
-            Toast.makeText(this, "Movie already marked as favorite. It will not be added: " + movie.getTitle(), Toast.LENGTH_LONG).show();
-            return;
-        }
-        ContentValues values = new ContentValues();
-        values.put(MovieContract.MovieEntry.COLUMN_MOVIE_ID, movie.getMovieId());
-        values.put(MovieContract.MovieEntry.COLUMN_POSTER, movie.getPoster());
-        values.put(MovieContract.MovieEntry.COLUMN_AVERAGE_VOTE, movie.getAverageVote());
-        values.put(MovieContract.MovieEntry.COLUMN_RELEASE_DATA, movie.getReleaseDate());
-        values.put(MovieContract.MovieEntry.COLUMN_RUNTIME, movie.getRuntime());
-        values.put(MovieContract.MovieEntry.COLUMN_SYNOPSIS, movie.getSynopsis());
-        values.put(MovieContract.MovieEntry.COLUMN_TITLE, movie.getTitle());
-        Uri uri = getContentResolver().insert(MovieContract.MovieEntry.CONTENT_URI, values);
+        MovieUtils.addMovieToFavorite(this, movie, reviews);
     }
 
     @Override
@@ -215,17 +205,27 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    private boolean doesMovieExist(Movie movie) {
-        Uri uri = MovieContract.MovieEntry.CONTENT_URI;
-        uri = Uri.withAppendedPath(uri, "" + movie.getId());
+    /**
+     * Get all the reviews for the specified movie.
+     * @param movie The movie.
+     * @return The list of reviews.
+     */
+    private ArrayList<Review> getReviews(Movie movie) {
+        ArrayList<Review> reviews = new  ArrayList<>();
+        Uri uri = MovieContract.ReviewEntry.CONTENT_URI;
 
-        String[] projection = {MovieContract.MovieEntry._ID};
+        String[] projection = {MovieContract.ReviewEntry.COLUMN_CONTENT, MovieContract.ReviewEntry.COLUMN_AUTHOR, MovieContract.ReviewEntry.COLUMN_MOVIE_ID};
         Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
-        if(cursor.moveToNext()) {
-            return true;
+        while(cursor.moveToNext()) {
+            int contentIndex = cursor.getColumnIndex(MovieContract.ReviewEntry.COLUMN_CONTENT);
+            int authorIndex = cursor.getColumnIndex(MovieContract.ReviewEntry.COLUMN_AUTHOR);
+            String content = cursor.getString(contentIndex);
+            String author = cursor.getString(authorIndex);
+            Review review = new Review("", author, content);
+            reviews.add(review);
         }
 
-        return false;
+        return reviews;
     }
 
     /**

@@ -42,6 +42,7 @@ public class MovieContract {
                 ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_REVIEW;
 
         public static final String TABLE_NAME = PATH_REVIEW;
+        public static final String COLUMN_MOVIE_ID = "movie_id"; // FK
         public static final String COLUMN_AUTHOR = "title";
         public static final String COLUMN_CONTENT = "content";
     }
