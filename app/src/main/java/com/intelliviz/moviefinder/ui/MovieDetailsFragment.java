@@ -226,11 +226,12 @@ public class MovieDetailsFragment extends Fragment {
             mReleaseDateView.setText(str);
             mAverageVoteView.setText(new DecimalFormat("#.#").format(Float.parseFloat(mMovie.getAverageVote())) + "/10");
 
-            if(mIsNetworkAvailable && mMovie.getPoster() != null) {
+            if(mMovie.getPoster() != null) {
                 String url = String.format(ApiKeyMgr.PosterUrl, mMovie.getPoster());
                 Picasso
                         .with(getActivity())
                         .load(url)
+                        .placeholder(R.mipmap.placeholder)
                         .into(mPosterView);
 
             }

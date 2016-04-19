@@ -45,6 +45,7 @@ public class FavoriteMovieCursorAdapter extends RecyclerView.Adapter<FavoriteMov
             Picasso
                     .with(mContext)
                     .load(url)
+                    .placeholder(R.mipmap.placeholder)
                     .into((ImageView) holder.itemView);
         }
     }

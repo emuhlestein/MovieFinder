@@ -148,6 +148,11 @@ public class MovieListFragment extends Fragment implements
         } else {
             mFavoriteView.setVisibility(View.GONE);
             mPopularView.setVisibility(View.VISIBLE);
+            if(mPopularAdapter.getItemCount() == 0) {
+                mPopularEmptyView.setVisibility(View.VISIBLE);
+                mPopularEmptyView.setText("LIST IS EMPTY");
+                mPopularRecyclerView.setVisibility(View.GONE);
+            }
         }
 
         ((AppCompatActivity)getActivity()).getSupportActionBar().setSubtitle(getSortedBy(mSortBy));
@@ -206,8 +211,6 @@ public class MovieListFragment extends Fragment implements
             mMovieUrls = ApiKeyMgr.getMoviesUrl(mSortBy);
             getMovies();
         }
-
-        //((AppCompatActivity)getActivity()).getSupportActionBar().setSubtitle(mSortBy);
     }
 
     @Override
