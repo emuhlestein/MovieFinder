@@ -87,6 +87,13 @@ public class MovieListFragment extends Fragment implements
          * @param movie The selected movie.
          */
         void onSelectFavoriteMovie(Movie movie);
+
+        /**
+         * Callback for when sorting method changes.
+         *
+         * @param sortBy The sorting method.
+         */
+        void onChangeSort(String sortBy);
     }
 
     public MovieListFragment() {
@@ -142,7 +149,7 @@ public class MovieListFragment extends Fragment implements
         mSortBy = sp.getString(sort_key, DEFAULT_SORT_BY_OPTION);
 
 
-        if(mSortBy.equals("favorite")) {
+        if(mSortBy.equals(ApiKeyMgr.DEFAULT_SORT)) {
             mFavoriteView.setVisibility(View.VISIBLE);
             mPopularView.setVisibility(View.GONE);
         } else {
@@ -150,7 +157,7 @@ public class MovieListFragment extends Fragment implements
             mPopularView.setVisibility(View.VISIBLE);
             if(mPopularAdapter.getItemCount() == 0) {
                 mPopularEmptyView.setVisibility(View.VISIBLE);
-                mPopularEmptyView.setText("LIST IS EMPTY");
+                mPopularEmptyView.setText(R.string.empty_list);
                 mPopularRecyclerView.setVisibility(View.GONE);
             }
         }
@@ -158,7 +165,7 @@ public class MovieListFragment extends Fragment implements
         ((AppCompatActivity)getActivity()).getSupportActionBar().setSubtitle(getSortedBy(mSortBy));
 
 
-        getMovies();
+        loadMovies();
 
         return view;
     }
@@ -202,14 +209,16 @@ public class MovieListFragment extends Fragment implements
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         mSortBy = sharedPreferences.getString(key, DEFAULT_SORT_BY_OPTION);
 
-        if(mSortBy.equals("favorite")) {
+        if(mSortBy.equals(ApiKeyMgr.DEFAULT_SORT)) {
             mFavoriteView.setVisibility(View.VISIBLE);
             mPopularView.setVisibility(View.GONE);
+            mListener.onChangeSort(ApiKeyMgr.DEFAULT_SORT);
         } else {
             mFavoriteView.setVisibility(View.GONE);
             mPopularView.setVisibility(View.VISIBLE);
             mMovieUrls = ApiKeyMgr.getMoviesUrl(mSortBy);
-            getMovies();
+            mListener.onChangeSort("other");
+            loadMovies();
         }
     }
 
@@ -247,7 +256,7 @@ public class MovieListFragment extends Fragment implements
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         mFavoriteMovieCursorAdapter.swapCursor(cursor);
         if(mFavoriteMovieCursorAdapter.getItemCount() == 0) {
-            mFavoriteEmptyView.setText("LIST IS EMPTY");
+            mFavoriteEmptyView.setText(R.string.empty_list);
             mFavoriteEmptyView.setVisibility(View.VISIBLE);
             mFavoriteRecyclerView.setVisibility(View.GONE);
         } else {
@@ -265,47 +274,40 @@ public class MovieListFragment extends Fragment implements
         getLoaderManager().restartLoader(MOVIE_ITEM_LOADER, null, this);
     }
 
-    private void getMovies() {
+    private void loadMovies() {
 
-        if(mSortBy.equals("favorite")) {
+        if(isNetworkAvailable((AppCompatActivity) getActivity())) {
+            OkHttpClient client = new OkHttpClient();
+            Request request = new Request.Builder()
+                    .url(mMovieUrls)
+                    .build();
 
-        } else {
-            if(isNetworkAvailable((AppCompatActivity)getActivity())) {
-                OkHttpClient client = new OkHttpClient();
-                Request request = new Request.Builder()
-                        .url(mMovieUrls)
-                        .build();
+            Call call = client.newCall(request);
+            call.enqueue(new Callback() {
+                @Override
+                public void onFailure(Request request, IOException e) {
 
-                Call call = client.newCall(request);
-                call.enqueue(new Callback() {
-                    @Override
-                    public void onFailure(Request request, IOException e) {
+                }
 
-                    }
-
-                    @Override
-                    public void onResponse(Response response) throws IOException {
-                        String jsonData = response.body().string();
-                        if (response.isSuccessful()) {
-                            mMovies = extractMoviesFromJson(jsonData);
-                            //MovieListFragment.this.geta
-                            if(getActivity() == null) {
-                                Toast.makeText(getActivity(), "Activity is null", Toast.LENGTH_SHORT).show();
+                @Override
+                public void onResponse(Response response) throws IOException {
+                    String jsonData = response.body().string();
+                    if (response.isSuccessful()) {
+                        mMovies = extractMoviesFromJson(jsonData);
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                updateDisplay();
                             }
-                            getActivity().runOnUiThread(new Runnable() {
-                               @Override
-                               public void run() {
-                                    updateDisplay();
-                                }
-                            });
+                        });
 
-                        }
                     }
-                });
-            } else {
-                // network is unavailable
-            }
+                }
+            });
+        } else {
+            Toast.makeText(getActivity(), "Network is not available", Toast.LENGTH_SHORT).show();
         }
+
     }
 
     private void updateDisplay() {

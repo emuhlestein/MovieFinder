@@ -59,21 +59,38 @@ public class MainActivity extends AppCompatActivity implements
         Fragment fragment;
         View detailsView = findViewById(R.id.details_fragment);
         if (detailsView == null) {
-            fragment = MovieListFragment.newInstance(2);
-            FragmentTransaction ft = fm.beginTransaction();
-            ft.add(R.id.fragment_holder, fragment, LIST_FRAG_TAG);
-            ft.commit();
+            fragment = fm.findFragmentByTag(LIST_FRAG_TAG);
+            if(fragment == null) {
+                fragment = MovieListFragment.newInstance(2);
+                FragmentTransaction ft = fm.beginTransaction();
+                ft.add(R.id.fragment_holder, fragment, LIST_FRAG_TAG);
+                ft.commit();
+            }
             mIsTablet = false;
         } else {
-            fragment = MovieListFragment.newInstance(4);
+            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+            boolean isFavorite = false;
+            String sortBY = sp.getString("sort_by", ApiKeyMgr.DEFAULT_SORT);
+            if(sortBY.equals(ApiKeyMgr.DEFAULT_SORT)) {
+                isFavorite = true;
+            }
+
+            fragment = fm.findFragmentByTag(LIST_FRAG_TAG);
+            if (fragment == null) {
+                fragment = MovieListFragment.newInstance(4);
+            }
             FragmentTransaction ft = fm.beginTransaction();
             ft.add(R.id.fragment_holder, fragment, LIST_FRAG_TAG);
-            fragment = MovieDetailsFragment.newInstance(null, null, false);
+
+            fragment = fm.findFragmentByTag(DETAIL_FRAG_TAG);
+            if(fragment == null) {
+                fragment = MovieDetailsFragment.newInstance(null, null, isFavorite);
+            }
             ft.add(R.id.details_fragment, fragment, DETAIL_FRAG_TAG);
             ft.commit();
             mIsTablet = true;
 
-            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+
             sp.registerOnSharedPreferenceChangeListener(this);
         }
     }
@@ -129,12 +146,11 @@ public class MainActivity extends AppCompatActivity implements
     public void onSelectFavoriteMovie(Movie movie) {
         ArrayList<Review> reviews = getReviews(movie);
         if (mIsTablet) {
-            Fragment fragment = MovieDetailsFragment.newInstance(movie, reviews, true);
             FragmentManager fm = getSupportFragmentManager();
-            FragmentTransaction ft = fm.beginTransaction();
-            ft.replace(R.id.fragment_holder, fragment);
-            ft.addToBackStack(null);
-            ft.commit();
+            MovieDetailsFragment fragment = (MovieDetailsFragment) fm.findFragmentByTag(DETAIL_FRAG_TAG);
+            if(fragment != null) {
+                fragment.updateMovie(movie);
+            }
         } else {
             Intent intent = new Intent(this, MovieDetailsActivity.class);
 
@@ -142,6 +158,17 @@ public class MainActivity extends AppCompatActivity implements
             intent.putParcelableArrayListExtra(MovieDetailsActivity.REVIEWS_EXTRA, reviews);
             intent.putExtra(MovieDetailsActivity.FAVORITE_EXTRA, true);
             startActivityForResult(intent, DETAILS_ACTIVITY);
+        }
+    }
+
+    @Override
+    public void onChangeSort(String sortBy) {
+        if (mIsTablet) {
+            FragmentManager fm = getSupportFragmentManager();
+            MovieDetailsFragment fragment = (MovieDetailsFragment) fm.findFragmentByTag(DETAIL_FRAG_TAG);
+            if (fragment != null) {
+                fragment.updateSort(ApiKeyMgr.DEFAULT_SORT.equals(sortBy));
+            }
         }
     }
 
@@ -192,7 +219,7 @@ public class MainActivity extends AppCompatActivity implements
                 return;
             }
 
-            Movie movie = data.getParcelableExtra("movie_to_delete");
+            Movie movie = data.getParcelableExtra(MovieDetailsFragment.MOVIE_TO_DELETE_EXTRA);
             if (movie != null) {
                 onDeleteMovieFromFavorite(movie);
             }

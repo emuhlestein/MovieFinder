@@ -8,12 +8,12 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 
+import com.intelliviz.moviefinder.ApiKeyMgr;
 import com.intelliviz.moviefinder.Movie;
 import com.intelliviz.moviefinder.MovieUtils;
 import com.intelliviz.moviefinder.R;
 import com.intelliviz.moviefinder.Review;
 import com.intelliviz.moviefinder.Trailer;
-import com.intelliviz.moviefinder.db.MovieContract;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +22,7 @@ public class MovieDetailsActivity extends AppCompatActivity implements
         MovieDetailsFragment.OnSelectReviewListener {
     private static final String LIST_FRAG_TAG = "list frag tag";
     public static final String MOVIE_EXTRA = "movie";
-    public static final String FAVORITE_EXTRA = "favorite";
+    public static final String FAVORITE_EXTRA = ApiKeyMgr.DEFAULT_SORT;
     public static final String REVIEWS_EXTRA = "reviews";
 
     @Override
@@ -70,14 +70,9 @@ public class MovieDetailsActivity extends AppCompatActivity implements
 
     @Override
     public void onDeleteMovieFromFavorite(Movie movie) {
-        Uri uri = MovieContract.MovieEntry.CONTENT_URI;
-        uri = Uri.withAppendedPath(uri, "" + movie.getId());
-        //int numRows = getContentResolver().delete(uri, null, null);
-        //if(numRows == 1) {
-            Intent intent = new Intent();
-            intent.putExtra("movie_to_delete", movie);
-            setResult(RESULT_OK, intent);
-            finish();
-        //}
+        Intent intent = new Intent();
+        intent.putExtra(MovieDetailsFragment.MOVIE_TO_DELETE_EXTRA, movie);
+        setResult(RESULT_OK, intent);
+        finish();
     }
 }

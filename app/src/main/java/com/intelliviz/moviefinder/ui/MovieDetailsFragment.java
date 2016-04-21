@@ -55,6 +55,7 @@ public class MovieDetailsFragment extends Fragment {
     private static final String MOVIE_KEY = "movie_key";
     private static final String FAVORITE_KEY = "favorite_key";
     private static final String REVIEWS_KEY = "reviews_key";
+    public static final String MOVIE_TO_DELETE_EXTRA = "movie to delete";
     private Movie mMovie;
     private boolean mIsFavorite;
     private List<Review> mReviews;
@@ -197,6 +198,11 @@ public class MovieDetailsFragment extends Fragment {
         updateUI();
     }
 
+    public void updateSort(boolean isFavorite) {
+        mIsFavorite = isFavorite;
+        updateUI();
+    }
+
     public void onAddMovieClick(View view) {
         if(mListener != null) {
             mListener.onAddMovieToFavorite(mMovie, mReviews);
@@ -211,15 +217,9 @@ public class MovieDetailsFragment extends Fragment {
 
     private void updateUI() {
         if(mMovie == null) {
-            mAddToFavoriteButton.setVisibility(View.GONE);
-            mTitleView.setText("No Movie Selected");
-            mSummaryView.setText("");
-            mReleaseDateView.setText("");
-            mAverageVoteView.setText("");
-            mPosterView.setImageResource(android.R.color.transparent);
-            mReviewLayout.removeAllViews();
-            mRuntimeView.setText("");
+            clearSelectedMovie();
         } else {
+            mAddToFavoriteButton.setVisibility(View.VISIBLE);
             mTitleView.setText(mMovie.getTitle());
             mSummaryView.setText(mMovie.getSynopsis());
             mReleaseDateView.setText(mMovie.getReleaseDate());
@@ -279,7 +279,7 @@ public class MovieDetailsFragment extends Fragment {
         if(mLoadFromDatabase) {
             createReviewViews();
         }
-        else if(mIsNetworkAvailable) {
+        else if(mIsNetworkAvailable && mMovie != null) {
             String url = ApiKeyMgr.getReviewsUrl(mMovie.getMovieId());
             OkHttpClient client = new OkHttpClient();
             Request request = new Request.Builder()
@@ -296,7 +296,6 @@ public class MovieDetailsFragment extends Fragment {
                 @Override
                 public void onResponse(Response response) throws IOException {
                     String jsonData = response.body().string();
-                    JSONObject reviewsObject;
 
                     extractReviewsFromJson(jsonData);
 
@@ -315,7 +314,7 @@ public class MovieDetailsFragment extends Fragment {
 
     private void loadTrailers() {
 
-        if(mIsNetworkAvailable) {
+        if(mIsNetworkAvailable && mMovie != null) {
             String url = ApiKeyMgr.getTrailersUrl(mMovie.getMovieId());
             OkHttpClient client = new OkHttpClient();
             Request request = new Request.Builder()
@@ -332,7 +331,6 @@ public class MovieDetailsFragment extends Fragment {
                 @Override
                 public void onResponse(Response response) throws IOException {
                     String jsonData = response.body().string();
-                    JSONObject trailersObject;
 
                     extractTrailersFromJson(jsonData);
 
@@ -373,7 +371,9 @@ public class MovieDetailsFragment extends Fragment {
                     JSONObject moviesObject;
                     try {
                         moviesObject = new JSONObject(jsonData);
-                        mMovie.setRuntime(moviesObject.getString("runtime"));
+                        if (mMovie != null) {
+                            mMovie.setRuntime(moviesObject.getString("runtime"));
+                        }
                     } catch (JSONException e) {
                         e.printStackTrace();
                         return;
@@ -382,7 +382,9 @@ public class MovieDetailsFragment extends Fragment {
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                mRuntimeView.setText(mMovie.getRuntime() + "min");
+                                if (mMovie != null) {
+                                    mRuntimeView.setText(mMovie.getRuntime() + "min");
+                                }
                             }
                         });
                     }
@@ -452,9 +454,12 @@ public class MovieDetailsFragment extends Fragment {
 
     private Review extractReviewFromJson(JSONObject object) {
         try {
-            String author = object.getString("author");
-            String content = object.getString("content");
-            Review review = new Review(mMovie.getMovieId(), author, content);
+            Review review = null;
+            if(mMovie != null) {
+                String author = object.getString("author");
+                String content = object.getString("content");
+                review = new Review(mMovie.getMovieId(), author, content);
+            }
             return review;
         } catch (JSONException e) {
             Log.e(TAG, "Error reading review");
@@ -542,8 +547,27 @@ public class MovieDetailsFragment extends Fragment {
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
         intent.setAction(Intent.ACTION_SEND);
         intent.putExtra(Intent.EXTRA_TEXT, url);
-        intent.setType("video/*");
+        intent.setType("video/mp4");
 
         setShareIntent(intent);
+    }
+
+    private void clearSelectedMovie() {
+        mAddToFavoriteButton.setVisibility(View.GONE);
+        mTitleView.setText(R.string.no_movie_selected);
+        mSummaryView.setText("");
+        mReleaseDateView.setText("");
+        mAverageVoteView.setText("");
+        mPosterView.setImageResource(android.R.color.transparent);
+        mReviewLayout.removeAllViews();
+        mRuntimeView.setText("");
+
+        if(mReviews != null) {
+            mReviews.clear();
+        }
+
+        if(mTrailers != null) {
+            mTrailers.clear();
+        }
     }
 }
