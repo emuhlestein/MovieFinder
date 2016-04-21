@@ -171,6 +171,13 @@ public class MainActivity extends AppCompatActivity implements
     public void onDeleteMovieFromFavorite(Movie movie) {
         Uri uri = MovieContract.MovieEntry.CONTENT_URI;
         uri = Uri.withAppendedPath(uri, "" + movie.getId());
+        int numRows = getContentResolver().delete(uri, null, null);
+
+        uri = MovieContract.ReviewEntry.CONTENT_URI;
+        String where = MovieContract.ReviewEntry.TABLE_NAME + "." + MovieContract.ReviewEntry.COLUMN_MOVIE_ID + " = ?";
+        String[] args = {movie.getMovieId()};
+        numRows = getContentResolver().delete(uri, where, args);
+
         MovieListFragment movieListFragment = ((MovieListFragment) getSupportFragmentManager()
                 .findFragmentByTag(LIST_FRAG_TAG));
         if (movieListFragment != null) {

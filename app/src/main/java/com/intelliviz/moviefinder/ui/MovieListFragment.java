@@ -265,7 +265,6 @@ public class MovieListFragment extends Fragment implements
         getLoaderManager().restartLoader(MOVIE_ITEM_LOADER, null, this);
     }
 
-
     private void getMovies() {
 
         if(mSortBy.equals("favorite")) {

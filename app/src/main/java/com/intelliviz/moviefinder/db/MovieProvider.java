@@ -19,12 +19,11 @@ import android.text.TextUtils;
 public class MovieProvider extends ContentProvider {
     private SqliteHelper mSqliteHelper;
     private static final String DBASE_NAME = "movies";
-    private static final int DBASE_VERSION = 7;
+    private static final int DBASE_VERSION = 1;
     private static final int MOVIE_LIST = 101;
     private static final int MOVIE_ID = 102;
     private static final int REVIEW_LIST = 201;
     private static final int REVIEW_ID = 202;
-
 
     private static UriMatcher sUriMatcher;
 
@@ -97,8 +96,6 @@ public class MovieProvider extends ContentProvider {
 
         SQLiteDatabase db = mSqliteHelper.getWritableDatabase();
         Cursor cursor = sqLiteQueryBuilder.query(db, projection, selection, selectionArgs, null, null, sortOrder);
-
-        int count = cursor.getCount();
 
         cursor.setNotificationUri(getContext().getContentResolver(), uri);
         return cursor;
@@ -254,7 +251,7 @@ public class MovieProvider extends ContentProvider {
             // create the category version table
             sql = "CREATE TABLE " + MovieContract.ReviewEntry.TABLE_NAME +
                     " ( " + MovieContract.ReviewEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    MovieContract.ReviewEntry.COLUMN_MOVIE_ID + " INTEGER NOT NULL," +
+                    MovieContract.ReviewEntry.COLUMN_MOVIE_ID + " TEXT NOT NULL," +
                     MovieContract.ReviewEntry.COLUMN_CONTENT + " TEXT NOT NULL, " +
                     MovieContract.ReviewEntry.COLUMN_AUTHOR + " TEXT NOT NULL);";
 

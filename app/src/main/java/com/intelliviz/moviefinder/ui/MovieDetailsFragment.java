@@ -60,12 +60,10 @@ public class MovieDetailsFragment extends Fragment {
     private List<Review> mReviews;
     private List<Trailer> mTrailers;
     private String mMovieUrl;
-    private TextView[] mReviewViews;
     private OnSelectReviewListener mListener;
     private boolean mLoadFromDatabase = false;
     private boolean mIsNetworkAvailable = false;
     private ShareActionProvider mShareActionProvider;
-
 
     @Bind(R.id.posterView) ImageView mPosterView;
     @Bind(R.id.titleView) TextView mTitleView;
@@ -77,9 +75,30 @@ public class MovieDetailsFragment extends Fragment {
     @Bind(R.id.addToFavoritesButton) Button mAddToFavoriteButton;
 
     public interface OnSelectReviewListener {
+
+        /**
+         * A movie review has been selected.
+         * @param review The review.
+         */
         void onSelectReview(Review review);
+
+        /**
+         * A movie trailer has been selected.
+         * @param trailer The trailer.
+         */
         void onSelectTrailer(Trailer trailer);
+
+        /**
+         * Add a movie to the favorites list.
+         * @param movie The movie to add.
+         * @param mReviews The associated reviews.
+         */
         void onAddMovieToFavorite(Movie movie, List<Review> mReviews);
+
+        /**
+         * Delete a movie from the favorites list.
+         * @param movie The movie to delete.
+         */
         void onDeleteMovieFromFavorite(Movie movie);
     }
 
@@ -288,7 +307,6 @@ public class MovieDetailsFragment extends Fragment {
                                 createReviewViews();
                             }
                         });
-
                     }
                 }
             });
@@ -297,7 +315,6 @@ public class MovieDetailsFragment extends Fragment {
 
     private void loadTrailers() {
 
-        // TODO put network somewhere else
         if(mIsNetworkAvailable) {
             String url = ApiKeyMgr.getTrailersUrl(mMovie.getMovieId());
             OkHttpClient client = new OkHttpClient();
@@ -327,7 +344,6 @@ public class MovieDetailsFragment extends Fragment {
                                 createTrailerViews();
                             }
                         });
-
                     }
                 }
             });
@@ -377,12 +393,10 @@ public class MovieDetailsFragment extends Fragment {
 
     private List<Review> extractReviewsFromJson(String s) {
         JSONObject reviewsObject = null;
-        int page = 0;
         try {
             mReviews = new ArrayList<>();
             JSONObject oneReview;
             reviewsObject = new JSONObject(s);
-            page = reviewsObject.getInt("page");
             JSONArray reviewArray = reviewsObject.getJSONArray("results");
             Review review;
             for(int i = 0; i < reviewArray.length(); i++) {
@@ -516,7 +530,6 @@ public class MovieDetailsFragment extends Fragment {
 
         return view;
     }
-
 
     private void setShareIntent(Intent shareIntent) {
         if (mShareActionProvider != null) {
