@@ -12,4 +12,5 @@
     <string name="share">Share</string>
     <string name="no_movie_selected">No Movie Selected</string>
     <string name="empty_list">LIST IS EMPTY</string>
+    <string name="movie_exists">"Movie already marked as favorite. It will not be added: "</string>
 </resources>

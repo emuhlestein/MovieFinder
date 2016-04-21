@@ -212,6 +212,8 @@ public class MovieDetailsFragment extends Fragment {
     public void onDeleteMovieClick(View view) {
         if(mListener != null) {
             mListener.onDeleteMovieFromFavorite(mMovie);
+            mMovie = null;
+            clearSelectedMovie();
         }
     }
 

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.intelliviz.moviefinder.db.MovieContract;
@@ -14,6 +15,7 @@ import java.util.List;
  * Created by edm on 4/8/2016.
  */
 public class MovieUtils {
+    public static final String TAG = MovieUtils.class.getSimpleName();
     public static Movie extractMovieFromCursor(Cursor cursor) {
         if(cursor == null) {
             return null;
@@ -42,7 +44,7 @@ public class MovieUtils {
 
     public static void addMovieToFavorite(Activity activity, Movie movie, List<Review> reviews) {
         if(doesMovieExist(activity, movie)) {
-            Toast.makeText(activity, "Movie already marked as favorite. It will not be added: " + movie.getTitle(), Toast.LENGTH_LONG).show();
+            Toast.makeText(activity, activity.getString(R.string.movie_exists) + movie.getTitle(), Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -56,6 +58,9 @@ public class MovieUtils {
         values.put(MovieContract.MovieEntry.COLUMN_TITLE, movie.getTitle());
         Uri uri = activity.getContentResolver().insert(MovieContract.MovieEntry.CONTENT_URI, values);
 
+        if(uri == null) {
+            Log.d(TAG, "URI is null");
+        }
         String id = uri.getLastPathSegment();
         for(Review review : reviews) {
             values = new ContentValues();
@@ -68,8 +73,6 @@ public class MovieUtils {
 
     private static boolean doesMovieExist(Activity activity, Movie movie) {
         Uri uri = MovieContract.MovieEntry.CONTENT_URI;
-        //uri = Uri.withAppendedPath(uri, "" + movie.getId());
-
         String selectionClause = MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?";
         String[] selectionArgs = {movie.getMovieId()};
         String[] projection = {MovieContract.MovieEntry._ID, MovieContract.MovieEntry.COLUMN_MOVIE_ID};
@@ -80,5 +83,4 @@ public class MovieUtils {
 
         return false;
     }
-
 }

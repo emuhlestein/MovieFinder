@@ -212,12 +212,16 @@ public class MovieListFragment extends Fragment implements
         if(mSortBy.equals(ApiKeyMgr.DEFAULT_SORT)) {
             mFavoriteView.setVisibility(View.VISIBLE);
             mPopularView.setVisibility(View.GONE);
-            mListener.onChangeSort(ApiKeyMgr.DEFAULT_SORT);
+            if(mListener != null) {
+                mListener.onChangeSort(ApiKeyMgr.DEFAULT_SORT);
+            }
         } else {
             mFavoriteView.setVisibility(View.GONE);
             mPopularView.setVisibility(View.VISIBLE);
             mMovieUrls = ApiKeyMgr.getMoviesUrl(mSortBy);
-            mListener.onChangeSort("other");
+            if(mListener != null) {
+                mListener.onChangeSort("other");
+            }
             loadMovies();
         }
     }
@@ -305,7 +309,9 @@ public class MovieListFragment extends Fragment implements
                 }
             });
         } else {
-            Toast.makeText(getActivity(), "Network is not available", Toast.LENGTH_SHORT).show();
+            if(getActivity() != null) {
+                Toast.makeText(getActivity(), "Network is not available", Toast.LENGTH_SHORT).show();
+            }
         }
 
     }
