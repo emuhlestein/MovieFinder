@@ -1,10 +1,13 @@
 package com.intelliviz.moviefinder.ui;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.NavUtils;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.ShareActionProvider;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -61,6 +64,7 @@ public class MovieDetailsFragment extends Fragment {
     private OnSelectReviewListener mListener;
     private boolean mLoadFromDatabase = false;
     private boolean mIsNetworkAvailable = false;
+    private ShareActionProvider mShareActionProvider;
 
 
     @Bind(R.id.posterView) ImageView mPosterView;
@@ -107,6 +111,13 @@ public class MovieDetailsFragment extends Fragment {
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.details_fragment_menu, menu);
+        // Locate MenuItem with ShareActionProvider
+        MenuItem item = (MenuItem) menu.findItem(R.id.menu_item_share);
+
+        // Fetch and store ShareActionProvider
+        mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(item);
+
         super.onCreateOptionsMenu(menu, inflater);
     }
 
@@ -153,6 +164,8 @@ public class MovieDetailsFragment extends Fragment {
                     NavUtils.navigateUpFromSameTask(getActivity());
                 }
                 return true;
+            case R.id.menu_item_share:
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -353,7 +366,7 @@ public class MovieDetailsFragment extends Fragment {
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                mRuntimeView.setText(mMovie.getRuntime()+"min");
+                                mRuntimeView.setText(mMovie.getRuntime() + "min");
                             }
                         });
                     }
@@ -474,6 +487,8 @@ public class MovieDetailsFragment extends Fragment {
             return;
         }
 
+        createShareIntent(mTrailers.get(0).getUrl());
+
         for(int i = 0; i < mTrailers.size(); i++) {
             View view = createTrailerRow(i);
             mReviewLayout.addView(view);
@@ -500,5 +515,22 @@ public class MovieDetailsFragment extends Fragment {
         });
 
         return view;
+    }
+
+
+    private void setShareIntent(Intent shareIntent) {
+        if (mShareActionProvider != null) {
+            mShareActionProvider.setShareIntent(shareIntent);
+        }
+    }
+
+    private void createShareIntent(String url) {
+        Intent intent = new Intent();
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+        intent.setAction(Intent.ACTION_SEND);
+        intent.putExtra(Intent.EXTRA_TEXT, url);
+        intent.setType("video/*");
+
+        setShareIntent(intent);
     }
 }

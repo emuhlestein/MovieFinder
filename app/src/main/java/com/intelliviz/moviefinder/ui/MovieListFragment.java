@@ -310,7 +310,11 @@ public class MovieListFragment extends Fragment implements
     }
 
     private void updateDisplay() {
-        mPopularAdapter.notifyDataSetChanged();
+        if(mPopularAdapter.getItemCount() > 0) {
+            mPopularEmptyView.setVisibility(View.GONE);
+            mPopularRecyclerView.setVisibility(View.VISIBLE);
+            mPopularAdapter.notifyDataSetChanged();
+        }
     }
 
     public static boolean isNetworkAvailable(AppCompatActivity activity) {

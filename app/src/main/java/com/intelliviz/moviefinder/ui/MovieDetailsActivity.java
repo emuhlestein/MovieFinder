@@ -36,10 +36,14 @@ public class MovieDetailsActivity extends AppCompatActivity implements
         ArrayList<Review> reviews = intent.getParcelableArrayListExtra(REVIEWS_EXTRA);
 
         FragmentManager fm = getSupportFragmentManager();
-        MovieDetailsFragment fragment = MovieDetailsFragment.newInstance(movie, reviews, favorite);
-        FragmentTransaction ft = fm.beginTransaction();
-        ft.add(R.id.fragment_holder, fragment, LIST_FRAG_TAG);
-        ft.commit();
+        Fragment fragment = fm.findFragmentByTag(LIST_FRAG_TAG);
+
+        if(fragment == null) {
+            fragment = MovieDetailsFragment.newInstance(movie, reviews, favorite);
+            FragmentTransaction ft = fm.beginTransaction();
+            ft.add(R.id.fragment_holder, fragment, LIST_FRAG_TAG);
+            ft.commit();
+        }
     }
 
     @Override
