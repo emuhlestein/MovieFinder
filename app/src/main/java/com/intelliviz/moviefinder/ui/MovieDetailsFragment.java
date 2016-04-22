@@ -199,6 +199,7 @@ public class MovieDetailsFragment extends Fragment {
     }
 
     public void updateSort(boolean isFavorite) {
+        clearSelectedMovie();
         mIsFavorite = isFavorite;
         updateUI();
     }

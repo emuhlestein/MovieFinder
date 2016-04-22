@@ -61,6 +61,9 @@ public class MovieUtils {
         if(uri == null) {
             Log.d(TAG, "URI is null");
         }
+        if(reviews == null) {
+            Log.d(TAG, "Reviews is null");
+        }
         String id = uri.getLastPathSegment();
         for(Review review : reviews) {
             values = new ContentValues();
