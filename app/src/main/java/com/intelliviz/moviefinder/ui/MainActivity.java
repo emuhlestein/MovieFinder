@@ -70,24 +70,30 @@ public class MainActivity extends AppCompatActivity implements
         } else {
             SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
             boolean isFavorite = false;
+            boolean fragmentAdded = false;
             String sortBY = sp.getString("sort_by", ApiKeyMgr.DEFAULT_SORT);
             if(sortBY.equals(ApiKeyMgr.DEFAULT_SORT)) {
                 isFavorite = true;
             }
 
+            FragmentTransaction ft = fm.beginTransaction();
             fragment = fm.findFragmentByTag(LIST_FRAG_TAG);
             if (fragment == null) {
                 fragment = MovieListFragment.newInstance(4);
+                ft.add(R.id.fragment_holder, fragment, LIST_FRAG_TAG);
+                fragmentAdded = true;
             }
-            FragmentTransaction ft = fm.beginTransaction();
-            ft.add(R.id.fragment_holder, fragment, LIST_FRAG_TAG);
 
             fragment = fm.findFragmentByTag(DETAIL_FRAG_TAG);
             if(fragment == null) {
                 fragment = MovieDetailsFragment.newInstance(null, null, isFavorite);
+                ft.add(R.id.details_fragment, fragment, DETAIL_FRAG_TAG);
+                fragmentAdded = true;
             }
-            ft.add(R.id.details_fragment, fragment, DETAIL_FRAG_TAG);
-            ft.commit();
+
+            if(fragmentAdded) {
+                ft.commit();
+            }
             mIsTablet = true;
 
 

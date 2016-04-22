@@ -55,6 +55,7 @@ public class MovieDetailsFragment extends Fragment {
     private static final String MOVIE_KEY = "movie_key";
     private static final String FAVORITE_KEY = "favorite_key";
     private static final String REVIEWS_KEY = "reviews_key";
+    private static final String SELECTED_MOVIE_KEY = "selected_movie";
     public static final String MOVIE_TO_DELETE_EXTRA = "movie to delete";
     private Movie mMovie;
     private boolean mIsFavorite;
@@ -188,6 +189,24 @@ public class MovieDetailsFragment extends Fragment {
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable(SELECTED_MOVIE_KEY, mMovie);
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        if(savedInstanceState != null) {
+            mMovie = savedInstanceState.getParcelable(SELECTED_MOVIE_KEY);
+            if(mMovie != null) {
+                mMovieUrl = ApiKeyMgr.getMovieUrl(mMovie.getMovieId());
+            }
+            updateUI();
+        }
     }
 
     public void updateMovie(Movie movie) {

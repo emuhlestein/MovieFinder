@@ -58,19 +58,16 @@ public class MovieUtils {
         values.put(MovieContract.MovieEntry.COLUMN_TITLE, movie.getTitle());
         Uri uri = activity.getContentResolver().insert(MovieContract.MovieEntry.CONTENT_URI, values);
 
-        if(uri == null) {
-            Log.d(TAG, "URI is null");
-        }
-        if(reviews == null) {
+        if(reviews != null) {
+            for (Review review : reviews) {
+                values = new ContentValues();
+                values.put(MovieContract.ReviewEntry.COLUMN_MOVIE_ID, movie.getMovieId());
+                values.put(MovieContract.ReviewEntry.COLUMN_AUTHOR, review.getAuthor());
+                values.put(MovieContract.ReviewEntry.COLUMN_CONTENT, review.getContent());
+                uri = activity.getContentResolver().insert(MovieContract.ReviewEntry.CONTENT_URI, values);
+            }
+        } else {
             Log.d(TAG, "Reviews is null");
-        }
-        String id = uri.getLastPathSegment();
-        for(Review review : reviews) {
-            values = new ContentValues();
-            values.put(MovieContract.ReviewEntry.COLUMN_MOVIE_ID, movie.getMovieId());
-            values.put(MovieContract.ReviewEntry.COLUMN_AUTHOR, review.getAuthor());
-            values.put(MovieContract.ReviewEntry.COLUMN_CONTENT, review.getContent());
-            uri = activity.getContentResolver().insert(MovieContract.ReviewEntry.CONTENT_URI, values);
         }
     }
 
