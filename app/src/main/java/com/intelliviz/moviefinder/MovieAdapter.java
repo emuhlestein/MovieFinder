@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import com.intelliviz.moviefinder.ui.MovieListFragment;
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -50,12 +51,16 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieHolder>
                     .load(url)
                     .into((ImageView) holder.itemView);
         }
-
     }
 
     @Override
     public int getItemCount() {
         return mMovies.size();
+    }
+
+    public void setMovies(ArrayList<Movie> movies) {
+        mMovies = movies;
+        notifyDataSetChanged();
     }
 
     public void clear() {

@@ -37,6 +37,9 @@ public class FavoriteMovieCursorAdapter extends RecyclerView.Adapter<FavoriteMov
         }
 
         Movie movie = MovieUtils.extractMovieFromCursor(mCursor);
+        if(movie == null) {
+            return;
+        }
         holder.bindMovie(movie);
 
         String url = String.format(ApiKeyMgr.PosterUrl, movie.getPoster());

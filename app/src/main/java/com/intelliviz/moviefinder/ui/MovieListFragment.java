@@ -8,6 +8,7 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
@@ -19,7 +20,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -28,6 +28,7 @@ import com.intelliviz.moviefinder.ApiKeyMgr;
 import com.intelliviz.moviefinder.FavoriteMovieCursorAdapter;
 import com.intelliviz.moviefinder.Movie;
 import com.intelliviz.moviefinder.MovieAdapter;
+import com.intelliviz.moviefinder.MovieUtils;
 import com.intelliviz.moviefinder.R;
 import com.intelliviz.moviefinder.db.MovieContract;
 import com.squareup.okhttp.Call;
@@ -42,7 +43,6 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -55,9 +55,10 @@ public class MovieListFragment extends Fragment implements
         LoaderManager.LoaderCallbacks<Cursor> {
     private static final String TAG = MovieListFragment.class.getSimpleName();
     private static final String DEFAULT_SORT_BY_OPTION = "popular";
+    private static final String MOVIE_LIST_KEY = "movie_list_key";
     public static final int MOVIE_ITEM_LOADER = 0;
     private static final String COLUMN_SPAN_KEY = "column span key";
-    private List<Movie> mMovies = new ArrayList<>();
+    private ArrayList<Movie> mMovies = new ArrayList<>();
     private String mMovieUrls;
     private MovieAdapter mPopularAdapter;
     private FavoriteMovieCursorAdapter mFavoriteMovieCursorAdapter;
@@ -65,14 +66,12 @@ public class MovieListFragment extends Fragment implements
     private String mSortBy;
     private int mSpanCount;
 
-    @Bind(R.id.frameView) FrameLayout mViewSwitcher;
     @Bind(R.id.firstLayoutView) LinearLayout mFavoriteView;
     @Bind(R.id.firstGridView) RecyclerView mFavoriteRecyclerView;
     @Bind(R.id.firstEmptyView) TextView mFavoriteEmptyView;
     @Bind(R.id.secondLayoutView) LinearLayout mPopularView;
     @Bind(R.id.secondGridView) RecyclerView mPopularRecyclerView;
     @Bind(R.id.secondEmptyView) TextView mPopularEmptyView;
-
 
     public interface OnSelectMovieListener {
 
@@ -120,6 +119,15 @@ public class MovieListFragment extends Fragment implements
         int spanCount = mSpanCount;
         GridLayoutManager gridLayoutManager = new GridLayoutManager(getActivity(), spanCount);
 
+        if(savedInstanceState == null) {
+            loadMovies();
+        } else {
+            ArrayList<Movie> movies = savedInstanceState.getParcelableArrayList(MOVIE_LIST_KEY);
+            if(movies != null) {
+                mMovies = movies;
+            }
+        }
+
         mPopularAdapter = new MovieAdapter(getActivity(), mMovies);
         mPopularAdapter.setOnSelectMovieListener(mListener);
         mPopularRecyclerView.setLayoutManager(gridLayoutManager);
@@ -164,9 +172,6 @@ public class MovieListFragment extends Fragment implements
 
         ((AppCompatActivity)getActivity()).getSupportActionBar().setSubtitle(getSortedBy(mSortBy));
 
-
-        loadMovies();
-
         return view;
     }
 
@@ -202,7 +207,13 @@ public class MovieListFragment extends Fragment implements
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
+        outState.putParcelableArrayList(MOVIE_LIST_KEY, mMovies);
         super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
     }
 
     @Override
@@ -258,6 +269,11 @@ public class MovieListFragment extends Fragment implements
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+        int count = cursor.getCount();
+        while(cursor.moveToNext()) {
+            Movie movie = MovieUtils.extractMovieFromCursor(cursor);
+            Log.d(TAG, movie.getTitle() + "  " + movie.getId());
+        }
         mFavoriteMovieCursorAdapter.swapCursor(cursor);
         if(mFavoriteMovieCursorAdapter.getItemCount() == 0) {
             mFavoriteEmptyView.setText(R.string.empty_list);
@@ -280,40 +296,45 @@ public class MovieListFragment extends Fragment implements
 
     private void loadMovies() {
 
-        if(isNetworkAvailable((AppCompatActivity) getActivity())) {
-            OkHttpClient client = new OkHttpClient();
-            Request request = new Request.Builder()
-                    .url(mMovieUrls)
-                    .build();
+        if(isAdded()) {
+            if (isNetworkAvailable((AppCompatActivity) getActivity())) {
+                OkHttpClient client = new OkHttpClient();
+                Request request = new Request.Builder()
+                        .url(mMovieUrls)
+                        .build();
 
-            Call call = client.newCall(request);
-            call.enqueue(new Callback() {
-                @Override
-                public void onFailure(Request request, IOException e) {
-
-                }
-
-                @Override
-                public void onResponse(Response response) throws IOException {
-                    String jsonData = response.body().string();
-                    if (response.isSuccessful()) {
-                        mMovies = extractMoviesFromJson(jsonData);
-                        getActivity().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                updateDisplay();
-                            }
-                        });
+                Call call = client.newCall(request);
+                call.enqueue(new Callback() {
+                    @Override
+                    public void onFailure(Request request, IOException e) {
 
                     }
+
+                    @Override
+                    public void onResponse(Response response) throws IOException {
+                        String jsonData = response.body().string();
+                        if (isAdded()) {
+                            if (response.isSuccessful()) {
+                                mMovies = extractMoviesFromJson(jsonData);
+                                MovieUtils.markFavoriteMovies(getActivity(), mMovies);
+                                getActivity().runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        updateDisplay();
+                                    }
+                                });
+                            }
+                        }
+                    }
+                });
+            } else {
+                if (isAdded()) {
+                    if (getActivity() != null) {
+                        Toast.makeText(getActivity(), "Network is not available", Toast.LENGTH_SHORT).show();
+                    }
                 }
-            });
-        } else {
-            if(getActivity() != null) {
-                Toast.makeText(getActivity(), "Network is not available", Toast.LENGTH_SHORT).show();
             }
         }
-
     }
 
     private void updateDisplay() {
@@ -339,7 +360,7 @@ public class MovieListFragment extends Fragment implements
         return isAvailable;
     }
 
-    private List<Movie> extractMoviesFromJson(String s) {
+    private ArrayList<Movie> extractMoviesFromJson(String s) {
         JSONObject moviesObject = null;
         int page = 0;
         try {
@@ -382,11 +403,13 @@ public class MovieListFragment extends Fragment implements
     }
 
     private String getSortedBy(String value) {
-        String[] sortByOptions = getActivity().getResources().getStringArray(R.array.sort_by_options);
-        String[] sortByValues = getActivity().getResources().getStringArray(R.array.sort_by_values);
-        for(int i = 0; i < sortByValues.length; i++) {
-            if(sortByValues[i].equals(value)) {
-                return sortByOptions[i];
+        if(isAdded()) {
+            String[] sortByOptions = getActivity().getResources().getStringArray(R.array.sort_by_options);
+            String[] sortByValues = getActivity().getResources().getStringArray(R.array.sort_by_values);
+            for (int i = 0; i < sortByValues.length; i++) {
+                if (sortByValues[i].equals(value)) {
+                    return sortByOptions[i];
+                }
             }
         }
         return value;

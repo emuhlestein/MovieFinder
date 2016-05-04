@@ -31,7 +31,6 @@ public class MovieDetailsActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_movie_details);
 
         Intent intent = getIntent();
-        boolean favorite = intent.getBooleanExtra(FAVORITE_EXTRA, false);
         Movie movie = intent.getParcelableExtra(MOVIE_EXTRA);
         ArrayList<Review> reviews = intent.getParcelableArrayListExtra(REVIEWS_EXTRA);
 
@@ -39,7 +38,7 @@ public class MovieDetailsActivity extends AppCompatActivity implements
         Fragment fragment = fm.findFragmentByTag(LIST_FRAG_TAG);
 
         if(fragment == null) {
-            fragment = MovieDetailsFragment.newInstance(movie, reviews, favorite);
+            fragment = MovieDetailsFragment.newInstance(movie, reviews);
             FragmentTransaction ft = fm.beginTransaction();
             ft.add(R.id.fragment_holder, fragment, LIST_FRAG_TAG);
             ft.commit();
@@ -64,15 +63,14 @@ public class MovieDetailsActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onAddMovieToFavorite(Movie movie, List<Review> reviews) {
+    public void onMarkMovieAsFavorite(Movie movie, List<Review> reviews) {
+        MovieUtils.getAllMovies(this);
         MovieUtils.addMovieToFavorite(this, movie, reviews);
+        MovieUtils.getAllMovies(this);
     }
 
     @Override
-    public void onDeleteMovieFromFavorite(Movie movie) {
-        Intent intent = new Intent();
-        intent.putExtra(MovieDetailsFragment.MOVIE_TO_DELETE_EXTRA, movie);
-        setResult(RESULT_OK, intent);
-        finish();
+    public void onUnmarkMovieAsFavorite(Movie movie) {
+        MovieUtils.removeMovieFromFavorites(this, movie);
     }
 }

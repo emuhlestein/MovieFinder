@@ -9,6 +9,7 @@ import android.widget.Toast;
 
 import com.intelliviz.moviefinder.db.MovieContract;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -16,6 +17,7 @@ import java.util.List;
  */
 public class MovieUtils {
     public static final String TAG = MovieUtils.class.getSimpleName();
+
     public static Movie extractMovieFromCursor(Cursor cursor) {
         if(cursor == null) {
             return null;
@@ -38,7 +40,7 @@ public class MovieUtils {
         String runtime = cursor.getString(runtimeIndex);
         String synopsis = cursor.getString(synopsisIndex);
 
-        Movie movie = new Movie(title, poster, synopsis, movieId, releaseDate, aveVote, runtime, id);
+        Movie movie = new Movie(title, poster, synopsis, movieId, releaseDate, aveVote, runtime, 1, id);
         return movie;
     }
 
@@ -56,6 +58,7 @@ public class MovieUtils {
         values.put(MovieContract.MovieEntry.COLUMN_RUNTIME, movie.getRuntime());
         values.put(MovieContract.MovieEntry.COLUMN_SYNOPSIS, movie.getSynopsis());
         values.put(MovieContract.MovieEntry.COLUMN_TITLE, movie.getTitle());
+        values.put(MovieContract.MovieEntry.COLUMN_FAVORITE, movie.getFavorite());
         Uri uri = activity.getContentResolver().insert(MovieContract.MovieEntry.CONTENT_URI, values);
 
         if(reviews != null) {
@@ -71,7 +74,75 @@ public class MovieUtils {
         }
     }
 
-    private static boolean doesMovieExist(Activity activity, Movie movie) {
+    public static void dumpMovies(Activity activity) {
+        List<Movie> movies = getAllMovies(activity);
+        for(Movie movie : movies) {
+            Log.d(TAG, movie.getTitle() + "  " + movie.getId());
+        }
+    }
+
+    public static List<Movie> getAllMovies(Activity activity) {
+        List<Movie> movies = new ArrayList<Movie>();
+        Uri uri = MovieContract.MovieEntry.CONTENT_URI;
+        String[] projection = {MovieContract.MovieEntry._ID,
+                MovieContract.MovieEntry.COLUMN_MOVIE_ID,
+                MovieContract.MovieEntry.COLUMN_TITLE};
+        Cursor cursor = activity.getContentResolver().query(uri, projection, null, null, null);
+        while(cursor.moveToNext()) {
+            int idIndex = cursor.getColumnIndex(MovieContract.MovieEntry._ID);
+            int movieTitleIndex = cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_TITLE);
+
+            long id = cursor.getLong(idIndex);
+            String title = cursor.getString(movieTitleIndex);
+
+            Movie movie = new Movie(title, id);
+            movies.add(movie);
+        }
+
+        return movies;
+    }
+
+    public static void markFavoriteMovies(Activity activity, List<Movie> movies) {
+       for(Movie movie : movies) {
+            markFavoriteMovie(activity, movie);
+       }
+    }
+
+    public static void removeMovieFromFavorites(Activity activity, Movie movie) {
+        // delete movie from favorites list
+        Uri uri = MovieContract.MovieEntry.CONTENT_URI;
+        uri = Uri.withAppendedPath(uri, "" + movie.getId());
+        int numRows = activity.getContentResolver().delete(uri, null, null);
+
+        // delete reviews associated with the movie
+        uri = MovieContract.ReviewEntry.CONTENT_URI;
+        String where = MovieContract.ReviewEntry.TABLE_NAME + "." + MovieContract.ReviewEntry.COLUMN_MOVIE_ID + " = ?";
+        String[] args = {movie.getMovieId()};
+        numRows = activity.getContentResolver().delete(uri, where, args);
+
+        /*
+        MovieListFragment movieListFragment = ((MovieListFragment) activity.getSupportFragmentManager()
+                .findFragmentByTag(LIST_FRAG_TAG));
+        if (movieListFragment != null) {
+            movieListFragment.refreshList();
+        }
+        */
+    }
+
+    public static void markFavoriteMovie(Activity activity, Movie movie) {
+        Uri uri = MovieContract.MovieEntry.CONTENT_URI;
+        String selectionClause = MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?";
+        String[] selectionArgs = {movie.getMovieId()};
+        String[] projection = {MovieContract.MovieEntry._ID, MovieContract.MovieEntry.COLUMN_MOVIE_ID};
+        Cursor cursor = activity.getContentResolver().query(uri, projection, selectionClause, selectionArgs, null);
+        if(cursor.moveToNext()) {
+            int idIndex = cursor.getColumnIndex(MovieContract.MovieEntry._ID);
+            long id = cursor.getLong(idIndex);
+            movie.setId(id);
+        }
+    }
+
+    public static boolean doesMovieExist(Activity activity, Movie movie) {
         Uri uri = MovieContract.MovieEntry.CONTENT_URI;
         String selectionClause = MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?";
         String[] selectionArgs = {movie.getMovieId()};

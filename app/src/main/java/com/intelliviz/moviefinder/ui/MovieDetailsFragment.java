@@ -58,7 +58,6 @@ public class MovieDetailsFragment extends Fragment {
     private static final String SELECTED_MOVIE_KEY = "selected_movie";
     public static final String MOVIE_TO_DELETE_EXTRA = "movie to delete";
     private Movie mMovie;
-    private boolean mIsFavorite;
     private List<Review> mReviews;
     private List<Trailer> mTrailers;
     private String mMovieUrl;
@@ -91,24 +90,29 @@ public class MovieDetailsFragment extends Fragment {
         void onSelectTrailer(Trailer trailer);
 
         /**
-         * Add a movie to the favorites list.
-         * @param movie The movie to add.
+         * Mark a movie as favorite.
+         * @param movie The movie to mark.
          * @param mReviews The associated reviews.
          */
-        void onAddMovieToFavorite(Movie movie, List<Review> mReviews);
+        void onMarkMovieAsFavorite(Movie movie, List<Review> mReviews);
 
         /**
-         * Delete a movie from the favorites list.
-         * @param movie The movie to delete.
+         * Un mark a movie as a favorite.
+         * @param movie The movie to unmark.
          */
-        void onDeleteMovieFromFavorite(Movie movie);
+        void onUnmarkMovieAsFavorite(Movie movie);
     }
 
-    public static MovieDetailsFragment newInstance(Movie movie, ArrayList<Review> reviews, boolean isFavorite) {
+    /**
+     * Create the MovieDetailsFragment.
+     * @param movie The movie to show in the details fragment.
+     * @param reviews The reviews for the movie.
+     * @return The newly created fragment.
+     */
+    public static MovieDetailsFragment newInstance(Movie movie, ArrayList<Review> reviews) {
         Bundle args = new Bundle();
 
         args.putParcelable(MOVIE_KEY, movie);
-        args.putBoolean(FAVORITE_KEY, isFavorite);
         args.putParcelableArrayList(REVIEWS_KEY, reviews);
         MovieDetailsFragment fragment = new MovieDetailsFragment();
         fragment.setArguments(args);
@@ -150,11 +154,10 @@ public class MovieDetailsFragment extends Fragment {
         setHasOptionsMenu(true);
 
         mMovie = getArguments().getParcelable(MOVIE_KEY);
-        mIsFavorite = getArguments().getBoolean(FAVORITE_KEY);
         mReviews = getArguments().getParcelableArrayList(REVIEWS_KEY);
         mIsNetworkAvailable = MovieListFragment.isNetworkAvailable((AppCompatActivity) getActivity());
 
-        if(mIsFavorite || !mIsNetworkAvailable) {
+        if(mMovie.getFavorite() != 0 || !mIsNetworkAvailable) {
             mLoadFromDatabase = true;
         }
 
@@ -219,21 +222,22 @@ public class MovieDetailsFragment extends Fragment {
 
     public void updateSort(boolean isFavorite) {
         clearSelectedMovie();
-        mIsFavorite = isFavorite;
         updateUI();
     }
 
-    public void onAddMovieClick(View view) {
+    public void onMarkMovieAsFavoriteClick(View view) {
         if(mListener != null) {
-            mListener.onAddMovieToFavorite(mMovie, mReviews);
+            mMovie.setFavorite(1);
+            mListener.onMarkMovieAsFavorite(mMovie, mReviews);
+            updateUI();
         }
     }
 
-    public void onDeleteMovieClick(View view) {
+    public void onUnmarkMovieAsFavoriteClick(View view) {
         if(mListener != null) {
-            mListener.onDeleteMovieFromFavorite(mMovie);
-            mMovie = null;
-            clearSelectedMovie();
+            mMovie.setFavorite(0);
+            mListener.onUnmarkMovieAsFavorite(mMovie);
+            updateUI();
         }
     }
 
@@ -246,13 +250,13 @@ public class MovieDetailsFragment extends Fragment {
             mSummaryView.setText(mMovie.getSynopsis());
             mReleaseDateView.setText(mMovie.getReleaseDate());
 
-            if (mIsFavorite) {
+            if (mMovie.getFavorite() != 0) {
                 String unmarkFavorite = getActivity().getResources().getString(R.string.unmark_favorite);
                 mAddToFavoriteButton.setText(unmarkFavorite);
                 mAddToFavoriteButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        onDeleteMovieClick(v);
+                        onUnmarkMovieAsFavoriteClick(v);
                     }
                 });
             } else {
@@ -261,7 +265,7 @@ public class MovieDetailsFragment extends Fragment {
                 mAddToFavoriteButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        onAddMovieClick(v);
+                            onMarkMovieAsFavoriteClick(v);
                     }
                 });
             }

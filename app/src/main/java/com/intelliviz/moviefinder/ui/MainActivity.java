@@ -12,6 +12,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -38,13 +39,8 @@ public class MainActivity extends AppCompatActivity implements
     private static final int DETAILS_ACTIVITY = 0;
     private static final String DETAIL_FRAG_TAG = "detail frag tag";
     private static final String LIST_FRAG_TAG = "list frag tag";
-    private static final String API_KEY_NOT_SET = "api key not set";
-    private static final String MOVIE_LIST_KEY = "movie_list_key";
     private boolean mIsTablet;
-    public static final String MOVIE_EXTRA = "movie_info";
-    private ArrayList<Movie> mMovies = new ArrayList<>();
     private String API_KEY = null; // Put api key here
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,7 +82,7 @@ public class MainActivity extends AppCompatActivity implements
 
             fragment = fm.findFragmentByTag(DETAIL_FRAG_TAG);
             if(fragment == null) {
-                fragment = MovieDetailsFragment.newInstance(null, null, isFavorite);
+                fragment = MovieDetailsFragment.newInstance(null, null);
                 ft.add(R.id.details_fragment, fragment, DETAIL_FRAG_TAG);
                 fragmentAdded = true;
             }
@@ -120,6 +116,11 @@ public class MainActivity extends AppCompatActivity implements
             ft.addToBackStack(null);
             ft.commit();
             return true;
+        } else if(id == R.id.dump_db) {
+            List<Movie> movies = MovieUtils.getAllMovies(this);
+            for(Movie movie : movies) {
+                Log.d(TAG, movie.getTitle() + "  " + movie.getId());
+            }
         }
 
         return super.onOptionsItemSelected(item);
@@ -127,12 +128,16 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        outState.putParcelableArrayList(MOVIE_LIST_KEY, mMovies);
         super.onSaveInstanceState(outState);
     }
 
     @Override
     public void onSelectMovie(Movie movie) {
+
+        if(MovieUtils.doesMovieExist(this, movie)) {
+            // movie is as favorite
+            movie.setFavorite(1);
+        }
 
         if (mIsTablet) {
             MovieDetailsFragment detailsFragment = ((MovieDetailsFragment) getSupportFragmentManager()
@@ -196,16 +201,30 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onAddMovieToFavorite(Movie movie, List<Review> reviews) {
+    public void onMarkMovieAsFavorite(Movie movie, List<Review> reviews) {
+        Log.d(TAG, "Mark Before");
+        MovieUtils.getAllMovies(this);
         MovieUtils.addMovieToFavorite(this, movie, reviews);
+
+        Log.d(TAG, "After");
+        MovieUtils.getAllMovies(this);
     }
 
     @Override
-    public void onDeleteMovieFromFavorite(Movie movie) {
+    public void onUnmarkMovieAsFavorite(Movie movie) {
+        Log.d(TAG, "Unmark Before");
+        MovieUtils.getAllMovies(this);
+        MovieUtils.removeMovieFromFavorites(this, movie);
+
+        Log.d(TAG, "After");
+        MovieUtils.getAllMovies(this);
+        /*
+        // delete movie from favorites list
         Uri uri = MovieContract.MovieEntry.CONTENT_URI;
         uri = Uri.withAppendedPath(uri, "" + movie.getId());
         int numRows = getContentResolver().delete(uri, null, null);
 
+        // delete reviews associated with the movie
         uri = MovieContract.ReviewEntry.CONTENT_URI;
         String where = MovieContract.ReviewEntry.TABLE_NAME + "." + MovieContract.ReviewEntry.COLUMN_MOVIE_ID + " = ?";
         String[] args = {movie.getMovieId()};
@@ -216,6 +235,7 @@ public class MainActivity extends AppCompatActivity implements
         if (movieListFragment != null) {
             movieListFragment.refreshList();
         }
+        */
     }
 
     @Override
@@ -227,7 +247,7 @@ public class MainActivity extends AppCompatActivity implements
 
             Movie movie = data.getParcelableExtra(MovieDetailsFragment.MOVIE_TO_DELETE_EXTRA);
             if (movie != null) {
-                onDeleteMovieFromFavorite(movie);
+                onUnmarkMovieAsFavorite(movie);
             }
         }
         super.onActivityResult(requestCode, resultCode, data);
