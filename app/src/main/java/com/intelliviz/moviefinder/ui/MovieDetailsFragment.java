@@ -2,6 +2,7 @@ package com.intelliviz.moviefinder.ui;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.NavUtils;
@@ -22,6 +23,7 @@ import android.widget.TextView;
 
 import com.intelliviz.moviefinder.ApiKeyMgr;
 import com.intelliviz.moviefinder.Movie;
+import com.intelliviz.moviefinder.MovieUtils;
 import com.intelliviz.moviefinder.R;
 import com.intelliviz.moviefinder.Review;
 import com.intelliviz.moviefinder.Trailer;
@@ -157,7 +159,7 @@ public class MovieDetailsFragment extends Fragment {
         mReviews = getArguments().getParcelableArrayList(REVIEWS_KEY);
         mIsNetworkAvailable = MovieListFragment.isNetworkAvailable((AppCompatActivity) getActivity());
 
-        if(mMovie.getFavorite() != 0 || !mIsNetworkAvailable) {
+        if(mMovie.isFavorite() || !mIsNetworkAvailable) {
             mLoadFromDatabase = true;
         }
 
@@ -226,19 +228,17 @@ public class MovieDetailsFragment extends Fragment {
     }
 
     public void onMarkMovieAsFavoriteClick(View view) {
-        if(mListener != null) {
-            mMovie.setFavorite(1);
-            mListener.onMarkMovieAsFavorite(mMovie, mReviews);
-            updateUI();
-        }
+        MarkFavoriteMovieTask task = new MarkFavoriteMovieTask();
+        task.execute();
+        //MovieUtils.addMovieToFavorite(getActivity(), mMovie, mReviews);
+        //updateUI();
     }
 
     public void onUnmarkMovieAsFavoriteClick(View view) {
-        if(mListener != null) {
-            mMovie.setFavorite(0);
-            mListener.onUnmarkMovieAsFavorite(mMovie);
-            updateUI();
-        }
+        RemoveMovieFromFavoritesTask  task = new RemoveMovieFromFavoritesTask();
+        task.execute();
+        //MovieUtils.removeMovieFromFavorites(getActivity(), mMovie);
+        //updateUI();
     }
 
     private void updateUI() {
@@ -250,7 +250,7 @@ public class MovieDetailsFragment extends Fragment {
             mSummaryView.setText(mMovie.getSynopsis());
             mReleaseDateView.setText(mMovie.getReleaseDate());
 
-            if (mMovie.getFavorite() != 0) {
+            if (mMovie.isFavorite()) {
                 String unmarkFavorite = getActivity().getResources().getString(R.string.unmark_favorite);
                 mAddToFavoriteButton.setText(unmarkFavorite);
                 mAddToFavoriteButton.setOnClickListener(new View.OnClickListener() {
@@ -594,6 +594,40 @@ public class MovieDetailsFragment extends Fragment {
 
         if(mTrailers != null) {
             mTrailers.clear();
+        }
+    }
+
+    private class MarkFavoriteMovieTask extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            MovieUtils.addMovieToFavorite(getActivity(), mMovie, mReviews);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            updateUI();
+            if(mListener != null) {
+                mListener.onMarkMovieAsFavorite(mMovie, mReviews);
+            }
+        }
+    }
+
+    private class RemoveMovieFromFavoritesTask extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            MovieUtils.removeMovieFromFavorites(getActivity(), mMovie);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            updateUI();
+            if(mListener != null) {
+                mListener.onUnmarkMovieAsFavorite(mMovie);
+            }
         }
     }
 }

@@ -31,7 +31,6 @@ public class MovieContract {
         public static final String COLUMN_RELEASE_DATA = "release_date";
         public static final String COLUMN_AVERAGE_VOTE = "ave_vote";
         public static final String COLUMN_RUNTIME = "runtime";
-        public static final String COLUMN_FAVORITE = "favorite";
     }
 
     public static final class ReviewEntry implements BaseColumns {

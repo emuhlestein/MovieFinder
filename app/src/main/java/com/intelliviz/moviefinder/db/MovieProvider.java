@@ -244,7 +244,6 @@ public class MovieProvider extends ContentProvider {
                     MovieContract.MovieEntry.COLUMN_RELEASE_DATA + " TEXT NOT NULL, " +
                     MovieContract.MovieEntry.COLUMN_RUNTIME + " TEXT NOT NULL, " +
                     MovieContract.MovieEntry.COLUMN_SYNOPSIS + " TEXT NOT NULL, " +
-                    MovieContract.MovieEntry.COLUMN_FAVORITE + " INTEGER NOT NULL, " +
                     MovieContract.MovieEntry.COLUMN_TITLE + " TEXT NOT NULL);";
 
             db.execSQL(sql);

@@ -28,6 +28,7 @@ import com.intelliviz.moviefinder.ApiKeyMgr;
 import com.intelliviz.moviefinder.FavoriteMovieCursorAdapter;
 import com.intelliviz.moviefinder.Movie;
 import com.intelliviz.moviefinder.MovieAdapter;
+import com.intelliviz.moviefinder.MovieBox;
 import com.intelliviz.moviefinder.MovieUtils;
 import com.intelliviz.moviefinder.R;
 import com.intelliviz.moviefinder.db.MovieContract;
@@ -58,7 +59,6 @@ public class MovieListFragment extends Fragment implements
     private static final String MOVIE_LIST_KEY = "movie_list_key";
     public static final int MOVIE_ITEM_LOADER = 0;
     private static final String COLUMN_SPAN_KEY = "column span key";
-    private ArrayList<Movie> mMovies = new ArrayList<>();
     private String mMovieUrls;
     private MovieAdapter mPopularAdapter;
     private FavoriteMovieCursorAdapter mFavoriteMovieCursorAdapter;
@@ -124,11 +124,11 @@ public class MovieListFragment extends Fragment implements
         } else {
             ArrayList<Movie> movies = savedInstanceState.getParcelableArrayList(MOVIE_LIST_KEY);
             if(movies != null) {
-                mMovies = movies;
+                MovieBox.get().addMovies(movies);
             }
         }
 
-        mPopularAdapter = new MovieAdapter(getActivity(), mMovies);
+        mPopularAdapter = new MovieAdapter(getActivity(), MovieBox.get().getMovies());
         mPopularAdapter.setOnSelectMovieListener(mListener);
         mPopularRecyclerView.setLayoutManager(gridLayoutManager);
         mPopularRecyclerView.setAdapter(mPopularAdapter);
@@ -207,7 +207,7 @@ public class MovieListFragment extends Fragment implements
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        outState.putParcelableArrayList(MOVIE_LIST_KEY, mMovies);
+        outState.putParcelableArrayList(MOVIE_LIST_KEY, MovieBox.get().getMovies());
         super.onSaveInstanceState(outState);
     }
 
@@ -269,7 +269,6 @@ public class MovieListFragment extends Fragment implements
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-        int count = cursor.getCount();
         while(cursor.moveToNext()) {
             Movie movie = MovieUtils.extractMovieFromCursor(cursor);
             Log.d(TAG, movie.getTitle() + "  " + movie.getId());
@@ -315,8 +314,9 @@ public class MovieListFragment extends Fragment implements
                         String jsonData = response.body().string();
                         if (isAdded()) {
                             if (response.isSuccessful()) {
-                                mMovies = extractMoviesFromJson(jsonData);
-                                MovieUtils.markFavoriteMovies(getActivity(), mMovies);
+                                ArrayList<Movie> movies = extractMoviesFromJson(jsonData);
+                                MovieUtils.markFavoriteMovies(getActivity(), movies);
+                                MovieBox.get().addMovies(movies);
                                 getActivity().runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -341,8 +341,8 @@ public class MovieListFragment extends Fragment implements
         if(mPopularAdapter.getItemCount() > 0) {
             mPopularEmptyView.setVisibility(View.GONE);
             mPopularRecyclerView.setVisibility(View.VISIBLE);
-            mPopularAdapter.notifyDataSetChanged();
         }
+        mPopularAdapter.notifyDataSetChanged();
     }
 
     public static boolean isNetworkAvailable(AppCompatActivity activity) {
@@ -368,17 +368,17 @@ public class MovieListFragment extends Fragment implements
             moviesObject = new JSONObject(s);
             page = moviesObject.getInt("page");
             JSONArray movieArray = moviesObject.getJSONArray("results");
-            mMovies.clear();
             Movie movie;
+            ArrayList<Movie> movies = new ArrayList<>();
             for(int i = 0; i < movieArray.length(); i++) {
                 oneMovie = movieArray.getJSONObject(i);
                 movie = extractMovieFromJson(oneMovie);
                 if(movie != null) {
-                    mMovies.add(movie);
+                    movies.add(movie);
                 }
             }
 
-            return mMovies;
+            return movies;
         } catch (JSONException e) {
             e.printStackTrace();
         }

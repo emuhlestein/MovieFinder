@@ -5,7 +5,6 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.intelliviz.moviefinder.db.MovieContract;
 
@@ -40,13 +39,13 @@ public class MovieUtils {
         String runtime = cursor.getString(runtimeIndex);
         String synopsis = cursor.getString(synopsisIndex);
 
-        Movie movie = new Movie(title, poster, synopsis, movieId, releaseDate, aveVote, runtime, 1, id);
+        Movie movie = new Movie(title, poster, synopsis, movieId, releaseDate, aveVote, runtime, id);
         return movie;
     }
 
     public static void addMovieToFavorite(Activity activity, Movie movie, List<Review> reviews) {
-        if(doesMovieExist(activity, movie)) {
-            Toast.makeText(activity, activity.getString(R.string.movie_exists) + movie.getTitle(), Toast.LENGTH_LONG).show();
+        if(doesMovieExist(activity, movie) != -1) {
+            //Toast.makeText(activity, activity.getString(R.string.movie_exists) + movie.getTitle(), Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -58,8 +57,9 @@ public class MovieUtils {
         values.put(MovieContract.MovieEntry.COLUMN_RUNTIME, movie.getRuntime());
         values.put(MovieContract.MovieEntry.COLUMN_SYNOPSIS, movie.getSynopsis());
         values.put(MovieContract.MovieEntry.COLUMN_TITLE, movie.getTitle());
-        values.put(MovieContract.MovieEntry.COLUMN_FAVORITE, movie.getFavorite());
         Uri uri = activity.getContentResolver().insert(MovieContract.MovieEntry.CONTENT_URI, values);
+        String id = uri.getLastPathSegment();
+        movie.setId(Long.parseLong(id));
 
         if(reviews != null) {
             for (Review review : reviews) {
@@ -120,6 +120,8 @@ public class MovieUtils {
         String[] args = {movie.getMovieId()};
         numRows = activity.getContentResolver().delete(uri, where, args);
 
+        movie.setId(-1);
+
         /*
         MovieListFragment movieListFragment = ((MovieListFragment) activity.getSupportFragmentManager()
                 .findFragmentByTag(LIST_FRAG_TAG));
@@ -142,16 +144,18 @@ public class MovieUtils {
         }
     }
 
-    public static boolean doesMovieExist(Activity activity, Movie movie) {
+    public static long doesMovieExist(Activity activity, Movie movie) {
         Uri uri = MovieContract.MovieEntry.CONTENT_URI;
         String selectionClause = MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?";
         String[] selectionArgs = {movie.getMovieId()};
         String[] projection = {MovieContract.MovieEntry._ID, MovieContract.MovieEntry.COLUMN_MOVIE_ID};
         Cursor cursor = activity.getContentResolver().query(uri, projection, selectionClause, selectionArgs, null);
         if(cursor.moveToNext()) {
-            return true;
+            int idIndex = cursor.getColumnIndex(MovieContract.MovieEntry._ID);
+            long id = cursor.getLong(idIndex);
+            return id;
         }
 
-        return false;
+        return -1;
     }
 }

@@ -134,11 +134,6 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onSelectMovie(Movie movie) {
 
-        if(MovieUtils.doesMovieExist(this, movie)) {
-            // movie is as favorite
-            movie.setFavorite(1);
-        }
-
         if (mIsTablet) {
             MovieDetailsFragment detailsFragment = ((MovieDetailsFragment) getSupportFragmentManager()
                     .findFragmentByTag(DETAIL_FRAG_TAG));
@@ -149,7 +144,7 @@ public class MainActivity extends AppCompatActivity implements
             Intent intent = new Intent(this, MovieDetailsActivity.class);
             intent.putExtra(MovieDetailsActivity.MOVIE_EXTRA, movie);
             intent.putExtra(MovieDetailsActivity.FAVORITE_EXTRA, false);
-            startActivity(intent);
+            startActivityForResult(intent, DETAILS_ACTIVITY);
         }
     }
 
@@ -202,52 +197,24 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onMarkMovieAsFavorite(Movie movie, List<Review> reviews) {
-        Log.d(TAG, "Mark Before");
-        MovieUtils.getAllMovies(this);
-        MovieUtils.addMovieToFavorite(this, movie, reviews);
-
-        Log.d(TAG, "After");
-        MovieUtils.getAllMovies(this);
     }
 
     @Override
     public void onUnmarkMovieAsFavorite(Movie movie) {
-        Log.d(TAG, "Unmark Before");
-        MovieUtils.getAllMovies(this);
-        MovieUtils.removeMovieFromFavorites(this, movie);
-
-        Log.d(TAG, "After");
-        MovieUtils.getAllMovies(this);
-        /*
-        // delete movie from favorites list
-        Uri uri = MovieContract.MovieEntry.CONTENT_URI;
-        uri = Uri.withAppendedPath(uri, "" + movie.getId());
-        int numRows = getContentResolver().delete(uri, null, null);
-
-        // delete reviews associated with the movie
-        uri = MovieContract.ReviewEntry.CONTENT_URI;
-        String where = MovieContract.ReviewEntry.TABLE_NAME + "." + MovieContract.ReviewEntry.COLUMN_MOVIE_ID + " = ?";
-        String[] args = {movie.getMovieId()};
-        numRows = getContentResolver().delete(uri, where, args);
-
-        MovieListFragment movieListFragment = ((MovieListFragment) getSupportFragmentManager()
-                .findFragmentByTag(LIST_FRAG_TAG));
-        if (movieListFragment != null) {
-            movieListFragment.refreshList();
-        }
-        */
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == DETAILS_ACTIVITY) {
-            if (data == null) {
-                return;
-            }
-
-            Movie movie = data.getParcelableExtra(MovieDetailsFragment.MOVIE_TO_DELETE_EXTRA);
-            if (movie != null) {
-                onUnmarkMovieAsFavorite(movie);
+            if (data != null) {
+                int refresh = data.getIntExtra(MovieDetailsActivity.REFRESH_LIST_EXTRA, 0);
+                if(refresh != 0) {
+                    MovieListFragment movieListFragment = ((MovieListFragment) getSupportFragmentManager()
+                            .findFragmentByTag(LIST_FRAG_TAG));
+                    if (movieListFragment != null) {
+                        movieListFragment.refreshList();
+                    }
+                }
             }
         }
         super.onActivityResult(requestCode, resultCode, data);

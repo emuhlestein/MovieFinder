@@ -10,7 +10,6 @@ import android.support.v7.app.AppCompatActivity;
 
 import com.intelliviz.moviefinder.ApiKeyMgr;
 import com.intelliviz.moviefinder.Movie;
-import com.intelliviz.moviefinder.MovieUtils;
 import com.intelliviz.moviefinder.R;
 import com.intelliviz.moviefinder.Review;
 import com.intelliviz.moviefinder.Trailer;
@@ -24,6 +23,7 @@ public class MovieDetailsActivity extends AppCompatActivity implements
     public static final String MOVIE_EXTRA = "movie";
     public static final String FAVORITE_EXTRA = ApiKeyMgr.DEFAULT_SORT;
     public static final String REVIEWS_EXTRA = "reviews";
+    public static final String REFRESH_LIST_EXTRA = "refresh";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,13 +64,15 @@ public class MovieDetailsActivity extends AppCompatActivity implements
 
     @Override
     public void onMarkMovieAsFavorite(Movie movie, List<Review> reviews) {
-        MovieUtils.getAllMovies(this);
-        MovieUtils.addMovieToFavorite(this, movie, reviews);
-        MovieUtils.getAllMovies(this);
+       // send message to main activity
+
     }
 
     @Override
     public void onUnmarkMovieAsFavorite(Movie movie) {
-        MovieUtils.removeMovieFromFavorites(this, movie);
+        // send message to main activity
+        Intent data = new Intent();
+        data.putExtra(REFRESH_LIST_EXTRA, 1);
+        setResult(0, data);
     }
 }

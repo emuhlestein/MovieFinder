@@ -17,23 +17,22 @@ public class Movie implements Parcelable {
     private String mReleaseDate;
     private String mAverageVote;
     private String mRuntime;
-    private int mFavorite;
     private long mId;
 
     public Movie () {
-        this("", "", "", "", "", "", "0", 0, 0);
+        this("", "", "", "", "", "", "0", -1);
     }
 
     public Movie(String title, long id) {
-        this(title, "", "", "", "", "", "0", 0, id);
+        this(title, "", "", "", "", "", "0", id);
     }
 
     public Movie(String title, String poster, String synopsis, String movieId, String releaseDate, String averageVote) {
-        this(title, poster, synopsis, movieId, releaseDate, averageVote, "0", 0, 0);
+        this(title, poster, synopsis, movieId, releaseDate, averageVote, "0", -1);
     }
 
     public Movie(String title, String poster, String synopsis, String movieId,
-                 String releaseDate, String averageVote, String runtime, int favorite, long id) {
+                 String releaseDate, String averageVote, String runtime, long id) {
         mTitle = title;
         mPoster = poster;
         mSynopsis = synopsis;
@@ -41,7 +40,6 @@ public class Movie implements Parcelable {
         mReleaseDate = releaseDate;
         mAverageVote = averageVote;
         mRuntime = runtime;
-        mFavorite = favorite;
         mId = id;
     }
 
@@ -77,16 +75,8 @@ public class Movie implements Parcelable {
         return mRuntime;
     }
 
-    public int getFavorite() {
-        return mFavorite;
-    }
-
-    public void setFavorite(int favorite) {
-        mFavorite = favorite;
-    }
-
     public boolean isFavorite() {
-        return mFavorite != 0;
+        return mId != -1;
     }
 
     public void setId(long id) {
@@ -109,7 +99,6 @@ public class Movie implements Parcelable {
         mReleaseDate = in.readString();
         mAverageVote = in.readString();
         mRuntime = in.readString();
-        mFavorite = in.readInt();
         mId = in.readLong();
     }
 
@@ -127,7 +116,6 @@ public class Movie implements Parcelable {
         dest.writeString(mReleaseDate);
         dest.writeString(mAverageVote);
         dest.writeString(mRuntime);
-        dest.writeInt(mFavorite);
         dest.writeLong(mId);
     }
 
